@@ -82,9 +82,9 @@ Le site est découpé en **modules indépendants**, développés et mis en ligne
 | Module | Public | Membre connecté | Admin Filament |
 |---|---|---|---|
 | **Actualités** | Lecture | — | Créer / modifier / supprimer |
-| **Présentation des équipes** | Lecture | — | Gérer équipes et joueurs |
-| **Calendrier des matchs** | Via Scorenco | — | — |
-| **Résultats** | Via Scorenco | — | — |
+| **Catégories & équipes** | Lecture (1 page par catégorie) | — | Gérer saisons, catégories, équipes, joueurs |
+| **Calendrier des matchs** | Via Scorenco (par équipe) | — | — |
+| **Résultats** | Via Scorenco (par équipe) | — | — |
 | **Planning des entraînements** | Lecture | — | Gérer les créneaux |
 | **Lieux d'entraînement** | Lecture (carte) | — | Gérer les gymnases |
 | **Convocations** | — | Voir et répondre | Créer et envoyer |
@@ -117,8 +117,9 @@ src/app/
 ├── pages/
 │   ├── home/           ← Page d'accueil
 │   ├── actualites/     ← Liste et détail des articles
-│   ├── equipes/        ← Présentation des équipes
-│   ├── calendrier/     ← Matchs (données Scorenco)
+│   ├── equipes/
+│   │   ├── equipes-list/     ← Liste de toutes les catégories de la saison en cours
+│   │   └── equipes-detail/   ← Page d'une catégorie : équipes, calendrier, résultats
 │   ├── planning/       ← Entraînements
 │   ├── boutique/       ← Articles + liens HelloAsso
 │   ├── galerie/        ← Photos
@@ -126,6 +127,12 @@ src/app/
 │   └── espace-membre/  ← Convocations, profil joueur (accès restreint)
 └── app.routes.ts       ← Configuration de la navigation
 ```
+
+**Routes équipes :**
+- `/equipes` → liste de toutes les catégories de la saison courante (U7, U9, U11, U13 M/F, Seniors M/F…)
+- `/equipes/u13-feminines` → page de la catégorie : présentation, liste des équipes, calendrier et résultats Scorenco filtrés par équipe(s) de cette catégorie
+
+> Pas de page dédiée par équipe individuelle à ce stade — la page catégorie agrège tout. À réévaluer si une catégorie a beaucoup d'équipes.
 
 - Chaque page est chargée à la demande (**lazy-loading**) : le navigateur ne télécharge que ce dont il a besoin.
 - L'`espace-membre` est protégé par un **guard** : seul un joueur connecté peut y accéder.
@@ -167,27 +174,47 @@ app/
 | Modèle | Table MySQL | Description |
 |---|---|---|
 | `User` | `users` | Tous les utilisateurs : joueurs et admins. Contient email, mot de passe, rôle. |
-| `Team` | `teams` | Une équipe du club (ex: Seniors Masculins, U13 Féminines…). |
-| `Player` | `players` | Lien entre un `User` et une `Team` — un joueur peut appartenir à plusieurs équipes. |
+| `Season` | `seasons` | Une saison sportive (ex: "2026-2027"). Contient les dates de début/fin et un flag `is_current`. |
+| `Category` | `categories` | Une catégorie d'âge et de genre pour une saison donnée. Ex : "U13 Féminines 2026-2027". Contient le nom, le genre (M/F/Mixte), les années de naissance éligibles (`birth_year_min`, `birth_year_max`), et la saison associée. |
+| `Team` | `teams` | Une équipe au sein d'une catégorie. Ex : "Équipe 1" dans U13 Féminines. Contient un identifiant Scorenco pour récupérer son calendrier/résultats. |
+| `Player` | `players` | Lien entre un `User` et une `Category` pour une saison. Un joueur est rattaché à sa catégorie d'âge, pas directement à une équipe — c'est ce rattachement qui détermine qui reçoit les convocations. |
 | `News` | `news` | Un article d'actualité : titre, contenu, date, image. |
 | `Photo` | `photos` | Une photo de galerie, associée à un album ou une catégorie. |
 | `Partner` | `partners` | Un sponsor ou partenaire : logo, nom, lien, niveau de partenariat. |
 | `Product` | `products` | Un article de la boutique : nom, description, image, lien HelloAsso. |
-| `TrainingSession` | `training_sessions` | Un créneau d'entraînement récurrent ou ponctuel : jour, heure, équipe, lieu. |
+| `TrainingSession` | `training_sessions` | Un créneau d'entraînement récurrent ou ponctuel : jour, heure, catégorie, lieu. |
 | `Venue` | `venues` | Un lieu d'entraînement ou de match : nom, adresse, coordonnées GPS. |
-| `Convocation` | `convocations` | Une convocation pour un match ou entraînement : équipe, date, lieu, type. |
+| `Convocation` | `convocations` | Une convocation pour un match ou entraînement : catégorie ou équipe ciblée, date, lieu, type. |
 | `ConvocationResponse` | `convocation_responses` | La réponse d'un joueur à une convocation : présent / absent / incertain. |
+
+### Gestion des catégories et des saisons
+
+> **Pourquoi découper par saison ?** Les catégories d'âge changent chaque année. Un joueur U13 cette saison sera U15 dans deux ans. En liant les catégories à une saison, on peut archiver l'historique sans perdre de données.
+
+Les années de naissance éligibles sont **saisies manuellement** par un admin lors de la création de la catégorie. Exemple :
+
+| Saison | Catégorie | Années de naissance |
+|---|---|---|
+| 2026-2027 | U13 Masculins | 2014 et 2015 |
+| 2026-2027 | U15 Féminines | 2012 et 2013 |
+| 2026-2027 | Seniors Masculins | 2006 et avant |
+
+> La règle de calcul des tranches d'âge dépend de la fédération — on ne l'automatise pas pour garder la flexibilité.
+
+### Import des joueurs par CSV
+
+Pour éviter de saisir chaque joueur à la main, le back-office Filament permettra d'**importer une liste de joueurs via un fichier CSV**. Le fichier contiendra au minimum : prénom, nom, date de naissance, email. Le système attribuera automatiquement chaque joueur à la catégorie correspondant à son année de naissance pour la saison en cours.
 
 ### Schéma des relations principales
 
 ```
-User ──────────── Player ──────────── Team
-                                        │
-                               TrainingSession ──── Venue
-                                        │
-                                  Convocation ──── ConvocationResponse
-                                                          │
-                                                        User (joueur)
+Season ──────── Category ──────── Team (scorenco_id)
+                    │
+                  Player ──────── User
+                    │
+             TrainingSession ──── Venue
+                    │
+              Convocation ──────── ConvocationResponse ──── User (joueur)
 ```
 
 ---
@@ -230,10 +257,10 @@ Chaque itération produit une version fonctionnelle et déployable.
 
 1. **Socle** : mise en place Laravel + Angular + Filament, hébergement OVH, authentification
 2. **Contenu éditorial** : actualités, galerie, partenaires
-3. **Club** : équipes, joueurs, lieux, planning entraînements
-4. **Calendrier & résultats** : intégration Scorenco
+3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements
+4. **Calendrier & résultats** : intégration Scorenco par équipe, affiché sur les pages catégories
 5. **Espace membre** : connexion joueurs, profil
-6. **Convocations** : création, envoi email, réponses, récap
+6. **Convocations** : création, envoi email, réponses, récap (inspiré SportEasy simplifié)
 7. **Boutique** : articles + intégration HelloAsso
 8. **Inscriptions** : formulaire + lien HelloAsso
 9. **Polish** : design final, responsive mobile, SEO, déploiement continu
