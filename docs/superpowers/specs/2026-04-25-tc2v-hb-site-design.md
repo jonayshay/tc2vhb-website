@@ -82,16 +82,38 @@ Le site est découpé en **modules indépendants**, développés et mis en ligne
 | Module | Public | Membre connecté | Admin Filament |
 |---|---|---|---|
 | **Actualités** | Lecture | — | Créer / modifier / supprimer |
+| **Infos pratiques** | Lecture (présentation, bureau/CA, commissions) | — | Gérer contenu, membres du bureau, commissions |
 | **Catégories & équipes** | Lecture (1 page par catégorie) | — | Gérer saisons, catégories, équipes, joueurs |
 | **Calendrier des matchs** | Via Scorenco (par équipe) | — | — |
 | **Résultats** | Via Scorenco (par équipe) | — | — |
-| **Planning des entraînements** | Lecture | — | Gérer les créneaux |
-| **Lieux d'entraînement** | Lecture (carte) | — | Gérer les gymnases |
+| **Planning des entraînements** | Lecture + carte des lieux | — | Gérer les créneaux |
 | **Convocations** | — | Voir et répondre | Créer et envoyer |
 | **Galerie photos** | Lecture | — | Upload et organisation |
 | **Boutique** | Voir + lien HelloAsso | — | Gérer les articles |
 | **Partenaires / sponsors** | Lecture | — | Gérer les partenaires |
 | **Inscription au club** | Lien HelloAsso | — | — |
+| **Demande de cours d'essai** | Formulaire public | — | Voir et traiter les demandes |
+
+### Module infos pratiques — détail
+
+Trois sous-pages gérées indépendamment dans Filament :
+
+1. **Présentation du club** : contenu texte riche (éditeur WYSIWYG dans Filament), une seule entrée éditable.
+2. **Bureau et Conseil d'Administration** : liste de `BoardMember` avec rôle, photo et ordre. Affiché sous forme d'**organigramme** côté Angular (composant visuel hiérarchique configurable).
+3. **Commissions** : liste de `Commission` avec nom, description et membres (saisis en texte libre, pas de compte utilisateur requis).
+
+### Module demande de cours d'essai — détail
+
+Formulaire public accessible sans connexion :
+- Champs : prénom, nom, âge, créneau souhaité (liste déroulante)
+- Les **créneaux disponibles** sont filtrés dynamiquement selon l'âge saisi : le système calcule la catégorie correspondante et propose les entraînements de cette catégorie (`TrainingSession`)
+- À la soumission : email de confirmation au demandeur + notification email à l'admin
+- Dans Filament, les admins voient la liste des demandes avec un statut (nouveau / contacté / validé / refusé)
+
+### Module planning des entraînements — détail
+
+- Liste des créneaux par catégorie (jour, heure, lieu)
+- **Carte interactive** (Google Maps ou Leaflet/OpenStreetMap) affichant les gymnases (`Venue`) avec leur adresse — clic sur un marqueur pour voir les créneaux associés
 
 ### Module convocations — approche envisagée
 
@@ -115,22 +137,46 @@ src/app/
 ├── core/               ← Authentification, intercepteurs réseau, services partagés
 ├── shared/             ← Composants réutilisables (header, footer, boutons, cartes...)
 ├── pages/
-│   ├── home/           ← Page d'accueil
-│   ├── actualites/     ← Liste et détail des articles
+│   ├── home/                 ← Page d'accueil
+│   ├── actualites/           ← Liste et détail des articles
+│   ├── infos-pratiques/
+│   │   ├── infos-home/       ← Page d'entrée "Infos pratiques"
+│   │   ├── presentation/     ← Présentation du club (texte riche)
+│   │   ├── bureau/           ← Bureau + CA avec organigramme
+│   │   └── commissions/      ← Liste des commissions
 │   ├── equipes/
 │   │   ├── equipes-list/     ← Liste de toutes les catégories de la saison en cours
 │   │   └── equipes-detail/   ← Page d'une catégorie : équipes, calendrier, résultats
-│   ├── planning/       ← Entraînements
-│   ├── boutique/       ← Articles + liens HelloAsso
-│   ├── galerie/        ← Photos
-│   ├── partenaires/    ← Sponsors
-│   └── espace-membre/  ← Convocations, profil joueur (accès restreint)
-└── app.routes.ts       ← Configuration de la navigation
+│   ├── planning/             ← Planning entraînements + carte interactive des lieux
+│   ├── inscription/          ← Page d'inscription (HelloAsso)
+│   ├── essai/                ← Formulaire de demande de cours d'essai
+│   ├── boutique/             ← Articles + liens HelloAsso
+│   ├── galerie/              ← Photos
+│   ├── partenaires/          ← Sponsors
+│   └── espace-membre/        ← Convocations, profil joueur (accès restreint)
+└── app.routes.ts             ← Configuration de la navigation
 ```
 
-**Routes équipes :**
-- `/equipes` → liste de toutes les catégories de la saison courante (U7, U9, U11, U13 M/F, Seniors M/F…)
-- `/equipes/u13-feminines` → page de la catégorie : présentation, liste des équipes, calendrier et résultats Scorenco filtrés par équipe(s) de cette catégorie
+**Routes principales :**
+
+| Route | Contenu |
+|---|---|
+| `/` | Page d'accueil |
+| `/actualites` | Liste des articles |
+| `/actualites/:slug` | Détail d'un article |
+| `/infos-pratiques` | Page d'entrée — liens vers les sous-pages |
+| `/infos-pratiques/presentation` | Présentation du club (texte riche) |
+| `/infos-pratiques/bureau` | Bureau et Conseil d'Administration (organigramme) |
+| `/infos-pratiques/commissions` | Liste et description des commissions |
+| `/equipes` | Liste de toutes les catégories de la saison courante |
+| `/equipes/:slug` | Page catégorie : équipes, calendrier, résultats Scorenco |
+| `/planning` | Planning des entraînements + carte des lieux |
+| `/inscription` | Page d'inscription (widget/lien HelloAsso) |
+| `/essai` | Formulaire de demande de cours d'essai |
+| `/boutique` | Articles + liens HelloAsso |
+| `/galerie` | Galerie photos |
+| `/partenaires` | Sponsors et partenaires |
+| `/espace-membre` | Convocations, profil (accès restreint) |
 
 > Pas de page dédiée par équipe individuelle à ce stade — la page catégorie agrège tout. À réévaluer si une catégorie a beaucoup d'équipes.
 
@@ -178,6 +224,9 @@ app/
 | `Category` | `categories` | Une catégorie d'âge et de genre pour une saison donnée. Ex : "U13 Féminines 2026-2027". Contient le nom, le genre (M/F/Mixte), les années de naissance éligibles (`birth_year_min`, `birth_year_max`), et la saison associée. |
 | `Team` | `teams` | Une équipe au sein d'une catégorie. Ex : "Équipe 1" dans U13 Féminines. Contient un identifiant Scorenco pour récupérer son calendrier/résultats. |
 | `Player` | `players` | Lien entre un `User` et une `Category` pour une saison. Un joueur est rattaché à sa catégorie d'âge, pas directement à une équipe — c'est ce rattachement qui détermine qui reçoit les convocations. |
+| `BoardMember` | `board_members` | Un membre du bureau ou du CA : nom, prénom, rôle, photo, ordre d'affichage. |
+| `Commission` | `commissions` | Une commission du club : nom, description, liste de membres (noms en texte libre). |
+| `TrialRequest` | `trial_requests` | Demande de cours d'essai : nom, prénom, âge, créneau souhaité, statut (nouveau / traité). |
 | `News` | `news` | Un article d'actualité : titre, contenu, date, image. |
 | `Photo` | `photos` | Une photo de galerie, associée à un album ou une catégorie. |
 | `Partner` | `partners` | Un sponsor ou partenaire : logo, nom, lien, niveau de partenariat. |
@@ -257,7 +306,7 @@ Chaque itération produit une version fonctionnelle et déployable.
 
 1. **Socle** : mise en place Laravel + Angular + Filament, hébergement OVH, authentification
 2. **Contenu éditorial** : actualités, galerie, partenaires
-3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements
+3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements, infos pratiques (bureau, commissions)
 4. **Calendrier & résultats** : intégration Scorenco par équipe, affiché sur les pages catégories
 5. **Espace membre** : connexion joueurs, profil
 6. **Convocations** : création, envoi email, réponses, récap (inspiré SportEasy simplifié)
