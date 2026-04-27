@@ -33,7 +33,7 @@ Le site doit pouvoir être **géré au quotidien par des responsables du club sa
 | **Backend** (le cerveau côté serveur)        | Laravel (PHP)          | Gère les données, la logique, les emails, le routing        |
 | **Back-office** (interface d'administration) | Filament               | Interface admin pour les gestionnaires du club              |
 | **Base de données**                          | MySQL                  | Stockage de toutes les données du club                      |
-| **Hébergement**                              | OVH (VPS ou mutualisé) | Serveurs français, conformes RGPD                           |
+| **Hébergement**                              | OVH WebCloud Starter   | Serveurs français, conformes RGPD                           |
 | **Paiements**                                | HelloAsso              | Plateforme française pour les associations, sans commission |
 | **Résultats / Calendrier**                   | Scorenco (API)         | Service spécialisé handball, synchronisé automatiquement    |
 
@@ -121,7 +121,7 @@ Le site est découpé en **modules indépendants**, développés et mis en ligne
 Quatre sous-pages gérées indépendamment dans Filament :
 
 1. **Présentation du club** : contenu texte riche (éditeur WYSIWYG dans Filament), une seule entrée éditable.
-2. **Bureau et Conseil d'Administration** : liste de `BoardMember` avec rôle, photo et ordre. Affiché sous forme d'**organigramme** côté Angular (composant visuel hiérarchique configurable). Une entrée peut être liée à un `User` existant (optionnel).
+2. **Bureau et Conseil d'Administration** : liste de `BoardMember` avec rôle, photo et ordre. Affiché sous forme d'**organigramme** côté Vue.js (composant visuel hiérarchique configurable). Une entrée peut être liée à un `User` existant (optionnel).
 3. **Commissions** : liste de `Commission` avec nom, description et membres (saisis en texte libre, pas de compte utilisateur requis).
 4. **Entraîneurs & arbitres** : liste des utilisateurs ayant le rôle `coach` ou `arbitre`, avec leur(s) catégorie(s) assignée(s) et une bio courte. Alimenté automatiquement depuis les `CoachAssignment` et les rôles utilisateurs.
 
@@ -267,8 +267,6 @@ Inertia utilise l'**authentification par session Laravel** — le mécanisme sta
 
 > **C'est quoi une "relation" entre modèles ?** Comme dans Excel, une ligne d'une table peut être liée à une ligne d'une autre table. Par exemple, un `Player` appartient à une `Team`, et une `Team` a plusieurs `Player`.
 
-### Modèles prévus
-
 ### Gestion des rôles utilisateur
 
 > Un même utilisateur peut cumuler plusieurs rôles simultanément. Exemple : coach des U15 Garçons, joueur en Seniors, et membre du CA.
@@ -330,18 +328,14 @@ Pour éviter de saisir chaque joueur à la main, le back-office Filament permett
 ### Schéma des relations principales
 
 ```
-Season ──────── Category ──────── Team (scorenco_id)
-                    │
-              ┌─────┴──────────┐
-            Player         CoachAssignment
-              │                 │
-            User ───────────────┘
-              │
-           Guardian ──────── User (joueur mineur)
-              │
-        TrainingSession ──── Venue
-              │
-         Convocation ──────── ConvocationResponse ──── User (joueur ou parent)
+Season ──── Category ──────────────────────────────────── Team (scorenco_id)
+                │
+    ┌───────────┼─────────────────┬──────────────────┐
+  Player   CoachAssignment  TrainingSession      Convocation
+    │            │               │                   │
+  User ──────────┘             Venue       ConvocationResponse ── User
+    │
+  Guardian ── User (joueur mineur)
 ```
 
 ---
@@ -351,7 +345,7 @@ Season ──────── Category ──────── Team (scorenco
 > **Scorenco** est une plateforme spécialisée dans la gestion des clubs de handball. Elle fournit une API (interface de communication entre services) qui permet de récupérer automatiquement les calendriers de matchs et les résultats.
 
 - Laravel interroge l'API Scorenco périodiquement et **met les données en cache** (stockage temporaire) pour éviter de la solliciter à chaque visite du site.
-- Le frontend Angular affiche ces données comme n'importe quelle autre donnée — transparent pour l'utilisateur.
+- Le frontend Vue.js affiche ces données comme n'importe quelle autre donnée — transparent pour l'utilisateur.
 - L'intégration exacte (identifiants, fréquence de synchro) sera précisée lors de l'itération du module calendrier.
 
 ---
@@ -465,7 +459,6 @@ Chaque itération produit une version fonctionnelle et déployable.
 ## 13. Points ouverts (à préciser)
 
 - [ ] Nom de domaine définitif (`tc2v-hb.fr` ou autre)
-- [ ] Type d'hébergement OVH retenu (mutualisé avec SSH ou VPS)
 - [ ] Identifiants et scope de l'API Scorenco pour ce club
 - [ ] Fonctionnement détaillé des convocations (notifications SMS ? application mobile ?)
 - [ ] Charte graphique : couleurs officielles du club, logo haute résolution
