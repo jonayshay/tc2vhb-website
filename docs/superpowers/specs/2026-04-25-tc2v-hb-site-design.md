@@ -29,18 +29,22 @@ Le site doit pouvoir être **géré au quotidien par des responsables du club sa
 
 | Composant                                    | Outil choisi           | Rôle                                                        |
 | -------------------------------------------- | ---------------------- | ----------------------------------------------------------- |
-| **Frontend** (ce que l'utilisateur voit)     | Angular                | Application web moderne, rapide, dans le navigateur         |
-| **Backend** (le cerveau côté serveur)        | Laravel (PHP)          | Gère les données, la logique, les emails, l'API             |
+| **Frontend** (ce que l'utilisateur voit)     | Vue.js + Inertia.js    | Interface moderne, rendue côté serveur par Laravel          |
+| **Backend** (le cerveau côté serveur)        | Laravel (PHP)          | Gère les données, la logique, les emails, le routing        |
 | **Back-office** (interface d'administration) | Filament               | Interface admin pour les gestionnaires du club              |
 | **Base de données**                          | MySQL                  | Stockage de toutes les données du club                      |
 | **Hébergement**                              | OVH (VPS ou mutualisé) | Serveurs français, conformes RGPD                           |
 | **Paiements**                                | HelloAsso              | Plateforme française pour les associations, sans commission |
 | **Résultats / Calendrier**                   | Scorenco (API)         | Service spécialisé handball, synchronisé automatiquement    |
 
-### Pourquoi Angular + Laravel ?
+### Pourquoi Vue.js + Inertia.js + Laravel ?
 
-- **Angular** génère des fichiers statiques (HTML/CSS/JS) déposés sur le serveur : pas besoin de Node.js en production, compatible hébergement OVH standard.
-- **Laravel** est le framework PHP le plus populaire au monde : robuste, bien documenté, très adapté aux projets associatifs avec beaucoup de logique métier (convocations, équipes, notifications).
+> **C'est quoi Inertia.js ?** C'est un "pont" entre Laravel et Vue. Laravel gère le routing et prépare les données côté serveur ; Vue gère l'affichage dans le navigateur. Le résultat : une interface fluide comme une application mobile, mais dont chaque page est rendue côté serveur — ce qui règle le problème de référencement sans configuration supplémentaire.
+
+- **Une seule application** : le site public et le back-office partagent le même projet Laravel. Pas d'API REST à maintenir, pas de double déploiement.
+- **SEO natif** : Laravel envoie du HTML complet au navigateur et aux moteurs de recherche — aucun compromis de référencement, aucun besoin de SSG ou de prebuild.
+- **Pas de Node.js en production** : Node.js est utilisé uniquement au moment de la compilation des assets (CSS/JS via Vite). Sur OVH, seul PHP tourne.
+- **Authentification simplifiée** : Inertia utilise les sessions Laravel standard — pas de tokens JWT, pas de gestion de refresh côté client.
 - **Filament** est un back-office "clé en main" qui s'intègre à Laravel : les administrateurs du club ont une interface soignée sans qu'on ait besoin de la coder from scratch.
 
 ---
@@ -48,31 +52,33 @@ Le site doit pouvoir être **géré au quotidien par des responsables du club sa
 ## 3. Architecture générale
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                        Hébergement OVH                         │
-│                                                                │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌─────────────┐  │
-│  │  tc2v-hb.fr      │  │ api.tc2v-hb.fr   │  │back.tc2v-   │  │
-│  │  Site public     │◄►│ Laravel API      │  │hb.fr        │  │
-│  │  Angular (SPA)   │  │ (REST JSON)      │  │Filament     │  │
-│  └──────────────────┘  └────────┬─────────┘  │back-office  │  │
-│                                 │            └──────┬──────┘  │
-│                        ┌────────▼────────────────────▼──────┐ │
-│                        │           Base MySQL               │ │
-│                        └────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────────────┘
-          │                     │
-          ▼                     ▼
-    Scorenco API           HelloAsso
-    (résultats, matchs)    (inscriptions, boutique)
+┌──────────────────────────────────────────────────────────┐
+│                    Hébergement OVH                       │
+│                                                          │
+│  ┌───────────────────────────────┐  ┌─────────────────┐ │
+│  │  tc2v-hb.fr                  │  │ back.tc2v-hb.fr │ │
+│  │  Laravel + Inertia + Vue      │  │ Filament        │ │
+│  │  (site public + routing +     │  │ back-office     │ │
+│  │   rendu HTML côté serveur)    │  │ (desktop only)  │ │
+│  └───────────────┬───────────────┘  └────────┬────────┘ │
+│                  │                           │          │
+│         ┌────────▼───────────────────────────▼──────┐   │
+│         │               Base MySQL                  │   │
+│         └────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+          │                        │
+          ▼                        ▼
+    Scorenco API              HelloAsso
+    (résultats, matchs)       (inscriptions, boutique)
 ```
 
-> **SPA (Single Page Application)** : le site Angular se charge une seule fois, puis navigue sans rechargement de page — comme une application mobile dans le navigateur. C'est plus rapide et fluide pour l'utilisateur.
+> **Comment ça marche ?** Quand un visiteur arrive sur une page, Laravel la construit côté serveur (HTML complet) et l'envoie au navigateur. Vue.js prend ensuite le relais pour les interactions — navigation fluide sans rechargement de page. Les moteurs de recherche reçoivent du HTML complet : **référencement natif, sans configuration particulière**.
 
-**Trois sous-domaines** sur le même hébergement OVH :
-- `tc2v-hb.fr` → site public Angular (responsive, optimisé smartphone)
-- `api.tc2v-hb.fr` → API Laravel REST (consommée par Angular)
+**Deux sous-domaines** sur le même hébergement OVH :
+- `tc2v-hb.fr` → application Laravel + Inertia/Vue (site public, responsive, optimisé smartphone)
 - `back.tc2v-hb.fr` → back-office Filament (usage desktop uniquement)
+
+Les deux partagent le **même projet Laravel et la même base MySQL**. Plus besoin d'API REST séparée.
 
 ---
 
@@ -145,36 +151,49 @@ Inspiré de **SportEasy** (outil de gestion d'équipes sportives) dans une versi
 
 ---
 
-## 5. Structure du frontend Angular
+## 5. Structure du frontend (Vue.js + Inertia.js)
 
-> **Angular** est un framework JavaScript développé par Google. Il permet de créer des interfaces web organisées en composants réutilisables, comme des "briques" qu'on assemble.
+> **Vue.js** est un framework JavaScript pour construire des interfaces web en composants réutilisables. **Inertia.js** est le pont qui connecte Vue à Laravel : chaque page Vue reçoit ses données directement du contrôleur Laravel correspondant, sans passer par une API REST.
+
+Le code frontend vit dans le projet Laravel, dans le dossier `resources/` :
 
 ```
-src/app/
-├── core/               ← Authentification, intercepteurs réseau, services partagés
-├── shared/             ← Composants réutilisables (header, footer, boutons, cartes...)
-├── pages/
-│   ├── home/                      ← Page d'accueil
-│   ├── actualites/                ← Liste et détail des articles
-│   ├── le-club/
-│   │   ├── club-home/             ← Page d'entrée "Le Club"
-│   │   ├── presentation/          ← Présentation du club (texte riche)
-│   │   ├── bureau/                ← Bureau + CA avec organigramme
-│   │   ├── commissions/           ← Liste des commissions
-│   │   └── entraineurs-arbitres/  ← Entraîneurs et arbitres du club
-│   ├── infos-pratiques/
-│   │   ├── infos-home/            ← Page d'entrée "Infos pratiques"
-│   │   ├── planning/              ← Planning entraînements + carte interactive
-│   │   ├── inscription/           ← Page d'inscription (HelloAsso)
-│   │   └── essai/                 ← Formulaire de demande de cours d'essai
-│   ├── equipes/
-│   │   ├── equipes-list/          ← Liste de toutes les catégories de la saison en cours
-│   │   └── equipes-detail/        ← Page d'une catégorie : équipes, calendrier, résultats
-│   ├── boutique/                  ← Articles + liens HelloAsso
-│   ├── galerie/                   ← Photos
-│   ├── partenaires/               ← Sponsors
-│   └── espace-membre/             ← Convocations, profil joueur (accès restreint)
-└── app.routes.ts                  ← Configuration de la navigation
+resources/
+├── js/
+│   ├── app.js                     ← Point d'entrée Inertia
+│   ├── layouts/
+│   │   ├── MainLayout.vue         ← Layout public (header, footer, nav)
+│   │   └── MemberLayout.vue       ← Layout espace membre (menu connecté)
+│   ├── components/                ← Composants Vue réutilisables (cartes, boutons, carte...)
+│   └── pages/                     ← Une page Vue par route
+│       ├── Home.vue
+│       ├── Actualites/
+│       │   ├── Index.vue          ← Liste des articles
+│       │   └── Show.vue           ← Détail d'un article
+│       ├── LeClub/
+│       │   ├── Index.vue          ← Page d'entrée "Le Club"
+│       │   ├── Presentation.vue
+│       │   ├── Bureau.vue         ← Organigramme
+│       │   ├── Commissions.vue
+│       │   └── EntraineursArbitres.vue
+│       ├── InfosPratiques/
+│       │   ├── Index.vue          ← Page d'entrée "Infos pratiques"
+│       │   ├── Planning.vue       ← Planning + carte interactive
+│       │   ├── Inscription.vue
+│       │   └── Essai.vue
+│       ├── Equipes/
+│       │   ├── Index.vue          ← Liste des catégories
+│       │   └── Show.vue           ← Page d'une catégorie
+│       ├── Boutique.vue
+│       ├── Galerie.vue
+│       ├── Partenaires.vue
+│       └── EspaceMembre/
+│           ├── Index.vue          ← Tableau de bord membre
+│           └── Convocations.vue
+├── css/
+│   └── app.css
+└── views/
+    └── app.blade.php              ← Template racine Inertia (point d'entrée HTML)
 ```
 
 **Routes principales :**
@@ -202,8 +221,9 @@ src/app/
 
 > Pas de page dédiée par équipe individuelle à ce stade — la page catégorie agrège tout. À réévaluer si une catégorie a beaucoup d'équipes.
 
-- Chaque page est chargée à la demande (**lazy-loading**) : le navigateur ne télécharge que ce dont il a besoin.
-- L'`espace-membre` est protégé par un **guard** : seul un joueur connecté peut y accéder.
+- Les routes sont définies dans `routes/web.php` (Laravel), pas dans un fichier frontend séparé.
+- L'`espace-membre` est protégé par un **middleware** Laravel : seul un utilisateur connecté peut y accéder.
+- La navigation entre pages se fait sans rechargement complet (Inertia intercepte les clics et charge uniquement les nouvelles données).
 
 ---
 
@@ -215,19 +235,29 @@ src/app/
 
 ```
 app/
-├── Http/Controllers/Api/   ← Points d'entrée de l'API (un par module)
-├── Http/Requests/          ← Validation des données reçues
-├── Http/Resources/         ← Mise en forme des réponses JSON
+├── Http/
+│   ├── Controllers/        ← Un controller par page (retourne une vue Inertia)
+│   │   ├── ActualitesController.php
+│   │   ├── EquipesController.php
+│   │   ├── ConvocationsController.php
+│   │   └── ...
+│   ├── Requests/           ← Validation des données reçues (formulaires)
+│   └── Middleware/         ← Protection des routes membres
 ├── Models/                 ← Représentation des données (voir section suivante)
-├── Notifications/          ← Emails automatiques (convocations, etc.)
+├── Notifications/          ← Emails automatiques (convocations, demandes d'essai...)
 ├── Services/
 │   └── ScorencoService.php ← Connexion à l'API Scorenco + mise en cache
 └── Filament/Resources/     ← Écrans du back-office admin
+routes/
+├── web.php                 ← Toutes les routes du site (publiques + membres)
+└── (pas d'api.php nécessaire pour le frontend Inertia)
 ```
 
 ### Authentification
 
-**Laravel Sanctum** gère la connexion des membres : après identification (email + mot de passe), l'utilisateur reçoit un **token** (clé secrète temporaire) que Angular utilise pour toutes ses requêtes sécurisées.
+Inertia utilise l'**authentification par session Laravel** — le mécanisme standard de PHP. Après identification (email + mot de passe), Laravel crée une session côté serveur. Plus simple et plus sécurisé qu'un système de tokens : pas de token à stocker côté client, pas de refresh à gérer.
+
+> Pas besoin de Sanctum pour le frontend. Sanctum pourrait être utilisé ultérieurement si une API externe (application mobile, intégration tierce) devait consommer les données.
 
 ---
 
@@ -338,13 +368,15 @@ Deux usages prévus :
 
 ## 10. Hébergement et déploiement
 
-| Élément             | Détail                                                                 |
-| ------------------- | ---------------------------------------------------------------------- |
-| **Fournisseur**     | OVH ou équivalent français                                             |
-| **Serveur Laravel** | VPS Ubuntu avec PHP 8.2+, MySQL, Apache ou Nginx                       |
-| **Site Angular**    | Fichiers statiques dans `public_html/`, servis par Apache              |
-| **Déploiement**     | Manuel dans un premier temps (FTP/SSH), CI/CD GitHub Actions à prévoir |
-| **HTTPS**           | Certificat Let's Encrypt (gratuit, renouvelé automatiquement)          |
+| Élément                  | Détail                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| **Fournisseur**          | OVH ou équivalent français                                                    |
+| **Serveur**              | VPS Ubuntu avec PHP 8.2+, MySQL, Apache ou Nginx                              |
+| **Build des assets**     | `npm run build` (Vite compile Vue/CSS → fichiers statiques dans `public/`)    |
+| **Node.js en prod**      | Non requis — Node sert uniquement au build, pas à l'exécution                 |
+| **Déploiement**          | Manuel dans un premier temps (SSH + `git pull` + `composer install`), CI/CD GitHub Actions à prévoir |
+| **HTTPS**                | Certificat Let's Encrypt (gratuit, renouvelé automatiquement)                 |
+| **SEO**                  | Natif — Laravel rend le HTML côté serveur, aucune configuration supplémentaire |
 
 ---
 
@@ -352,7 +384,7 @@ Deux usages prévus :
 
 Chaque itération produit une version fonctionnelle et déployable.
 
-1. **Socle** : mise en place Laravel + Angular + Filament, hébergement OVH, authentification
+1. **Socle** : mise en place Laravel + Inertia + Vue + Filament, hébergement OVH, authentification
 2. **Contenu éditorial** : actualités, galerie, partenaires
 3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements, infos pratiques (bureau, commissions)
 4. **Calendrier & résultats** : intégration Scorenco par équipe, affiché sur les pages catégories
