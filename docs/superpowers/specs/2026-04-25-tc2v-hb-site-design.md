@@ -450,15 +450,15 @@ Le back-office Filament est accessible à `http://localhost:8000/admin`.
 
 Chaque itération produit une version fonctionnelle et déployable.
 
-1. **Socle** : configuration WSL locale (PHP, MySQL, Node, Composer), mise en place Laravel + Inertia + Vue + Filament, authentification, déploiement OVH WebCloud
+1. **Socle local** : configuration WSL (PHP, MySQL, Node, Composer), mise en place Laravel + Inertia + Vue + Filament, authentification, système de rôles
 2. **Contenu éditorial** : actualités, galerie, partenaires
-3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements, infos pratiques (bureau, commissions)
+3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements, infos pratiques (bureau, commissions, entraîneurs/arbitres)
 4. **Calendrier & résultats** : intégration Scorenco par équipe, affiché sur les pages catégories
-5. **Espace membre** : connexion joueurs, profil
+5. **Espace membre** : connexion joueurs et parents, profil, liaison tuteur/joueur
 6. **Convocations** : création, envoi email, réponses, récap (inspiré SportEasy simplifié)
-7. **Boutique** : articles + intégration HelloAsso
-8. **Inscriptions** : formulaire + lien HelloAsso
-9. **Polish** : design final, responsive mobile, SEO, déploiement continu
+7. **Boutique & inscriptions** : articles HelloAsso, formulaire d'essai
+8. **Déploiement OVH WebCloud** : configuration hébergement, mise en production, SMTP, cron
+9. **Polish** : design final, responsive mobile, CI/CD GitHub Actions
 
 ---
 
