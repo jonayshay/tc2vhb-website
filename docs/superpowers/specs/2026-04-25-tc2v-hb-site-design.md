@@ -366,25 +366,91 @@ Deux usages prévus :
 
 ---
 
-## 10. Hébergement et déploiement
+## 10. Environnement local (WSL)
 
-| Élément                  | Détail                                                                        |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| **Fournisseur**          | OVH ou équivalent français                                                    |
-| **Serveur**              | VPS Ubuntu avec PHP 8.2+, MySQL, Apache ou Nginx                              |
-| **Build des assets**     | `npm run build` (Vite compile Vue/CSS → fichiers statiques dans `public/`)    |
-| **Node.js en prod**      | Non requis — Node sert uniquement au build, pas à l'exécution                 |
-| **Déploiement**          | Manuel dans un premier temps (SSH + `git pull` + `composer install`), CI/CD GitHub Actions à prévoir |
-| **HTTPS**                | Certificat Let's Encrypt (gratuit, renouvelé automatiquement)                 |
-| **SEO**                  | Natif — Laravel rend le HTML côté serveur, aucune configuration supplémentaire |
+Tout le développement se fait en local sur **WSL (Windows Subsystem for Linux)** avant tout déploiement sur OVH. L'environnement local reproduit les conditions de production.
+
+### Stack locale à installer sur WSL
+
+| Composant | Outil | Usage |
+|---|---|---|
+| **PHP 8.2+** | `apt install php8.2 php8.2-{cli,curl,mbstring,xml,mysql,zip,gd}` | Exécuter Laravel |
+| **MySQL** | `apt install mysql-server` | Base de données locale |
+| **Composer** | Script officiel getcomposer.org | Gestionnaire de dépendances PHP |
+| **Node.js** | Via `nvm` (Node Version Manager) | Compiler les assets Vue/CSS avec Vite |
+| **Git** | Préinstallé ou `apt install git` | Gestion du code source |
+
+### Lancer le projet en local
+
+Deux processus à lancer en parallèle lors du développement :
+
+```bash
+# Terminal 1 — serveur PHP Laravel
+php artisan serve          # → http://localhost:8000
+
+# Terminal 2 — compilateur Vue/CSS avec hot-reload
+npm run dev                # → recharge le navigateur à chaque modification
+```
+
+Le back-office Filament est accessible à `http://localhost:8000/admin`.
+
+### Configuration locale spécifique
+
+- **Fichier `.env`** : copié depuis `.env.example`, configure la connexion MySQL locale, les clés d'API (Scorenco, HelloAsso en sandbox), l'envoi d'emails via [Mailpit](https://mailpit.axllent.org/) (outil local qui capture les emails sans les envoyer réellement)
+- **Mailpit** : intercepte tous les emails de l'application (convocations, demandes d'essai) — permet de les visualiser dans un navigateur sans configuration SMTP réelle
+- **Migrations** : `php artisan migrate` crée les tables en local
+- **Seeders** : `php artisan db:seed` peuple la base avec des données de test (équipes fictives, joueurs, articles)
 
 ---
 
-## 11. Ordre de développement suggéré (par itérations)
+## 11. Hébergement OVH et déploiement
+
+### Offre retenue : WebCloud Starter
+
+> L'hébergement mutualisé OVH WebCloud Starter est plus contraignant qu'un VPS mais suffisant pour un club sportif. Les principales différences à anticiper :
+
+| Élément | Détail |
+|---|---|
+| **PHP** | 8.2+ disponible, configuré via `.ovhconfig` à la racine |
+| **MySQL** | Une base de données incluse |
+| **SSH** | Accès SSH disponible (nécessaire pour les commandes artisan) |
+| **Racine web** | Pointer vers le dossier `public/` de Laravel dans le manager OVH |
+| **Node.js** | Non disponible — le build Vue/CSS se fait en local, seuls les fichiers compilés sont uploadés |
+| **Redis** | Non disponible — cache via fichiers (driver `file`) |
+| **Queue workers** | Pas de processus persistant — les jobs sont traités via un **cron OVH** toutes les minutes (`php artisan queue:work --stop-when-empty`) |
+| **HTTPS** | Certificat Let's Encrypt inclus et renouvelé automatiquement |
+| **SEO** | Natif — Laravel rend le HTML côté serveur |
+
+### Implications techniques
+
+- **Cache** : `CACHE_DRIVER=file` dans le `.env` de production (pas de Redis)
+- **Emails** : configuration SMTP via un service externe (Brevo / Mailgun — offre gratuite suffisante pour un club)
+- **Convocations** : les emails sont envoyés via la queue traitée par le cron — délai max 1 minute acceptable
+- **Sessions** : stockées en fichiers (driver `file`) ou en base MySQL
+
+### Procédure de déploiement
+
+1. En local : `npm run build` → compile les assets Vue dans `public/build/`
+2. Upload par SSH/SFTP : code source + `public/build/` (sans `node_modules/`)
+3. Sur OVH via SSH :
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   php artisan migrate --force
+   php artisan storage:link
+   php artisan config:cache
+   php artisan route:cache
+   ```
+4. Configurer le cron OVH : `* * * * * php /path/to/artisan schedule:run`
+
+> CI/CD via GitHub Actions (déclenchement automatique sur push) à prévoir en itération dédiée.
+
+---
+
+## 12. Ordre de développement suggéré (par itérations)
 
 Chaque itération produit une version fonctionnelle et déployable.
 
-1. **Socle** : mise en place Laravel + Inertia + Vue + Filament, hébergement OVH, authentification
+1. **Socle** : configuration WSL locale (PHP, MySQL, Node, Composer), mise en place Laravel + Inertia + Vue + Filament, authentification, déploiement OVH WebCloud
 2. **Contenu éditorial** : actualités, galerie, partenaires
 3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements, infos pratiques (bureau, commissions)
 4. **Calendrier & résultats** : intégration Scorenco par équipe, affiché sur les pages catégories
@@ -396,7 +462,7 @@ Chaque itération produit une version fonctionnelle et déployable.
 
 ---
 
-## 12. Points ouverts (à préciser)
+## 13. Points ouverts (à préciser)
 
 - [ ] Nom de domaine définitif (`tc2v-hb.fr` ou autre)
 - [ ] Type d'hébergement OVH retenu (mutualisé avec SSH ou VPS)
