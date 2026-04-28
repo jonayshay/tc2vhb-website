@@ -56,7 +56,7 @@ Le site doit pouvoir être **géré au quotidien par des responsables du club sa
 │                    Hébergement OVH                       │
 │                                                          │
 │  ┌───────────────────────────────┐  ┌─────────────────┐ │
-│  │  tc2v-hb.fr                  │  │ back.tc2v-hb.fr │ │
+│  │  tc2v-handball.fr                  │  │ back.tc2v-handball.fr │ │
 │  │  Laravel + Inertia + Vue      │  │ Filament        │ │
 │  │  (site public + routing +     │  │ back-office     │ │
 │  │   rendu HTML côté serveur)    │  │ (desktop only)  │ │
@@ -75,8 +75,8 @@ Le site doit pouvoir être **géré au quotidien par des responsables du club sa
 > **Comment ça marche ?** Quand un visiteur arrive sur une page, Laravel la construit côté serveur (HTML complet) et l'envoie au navigateur. Vue.js prend ensuite le relais pour les interactions — navigation fluide sans rechargement de page. Les moteurs de recherche reçoivent du HTML complet : **référencement natif, sans configuration particulière**.
 
 **Deux sous-domaines** sur le même hébergement OVH :
-- `tc2v-hb.fr` → application Laravel + Inertia/Vue (site public, responsive, optimisé smartphone)
-- `back.tc2v-hb.fr` → back-office Filament (usage desktop uniquement)
+- `tc2v-handball.fr` → application Laravel + Inertia/Vue (site public, responsive, optimisé smartphone)
+- `back.tc2v-handball.fr` → back-office Filament (usage desktop uniquement)
 
 Les deux partagent le **même projet Laravel et la même base MySQL**. Plus besoin d'API REST séparée.
 
@@ -428,7 +428,7 @@ Chaque itération produit une version fonctionnelle et déployable.
 
 ## 13. Points ouverts (à préciser)
 
-- [ ] Nom de domaine définitif (`tc2v-hb.fr` ou autre)
+- [x] Nom de domaine : `tc2v-handball.fr`
 - [ ] Identifiants et scope de l'API Scorenco pour ce club
 - [ ] Logo haute résolution (à fournir)
 - [x] Charte graphique — palette officielle :
