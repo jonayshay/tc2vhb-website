@@ -16,10 +16,10 @@ Ce document décrit comment le site du TC2V Handball va être construit : les te
 
 Le site répond à deux publics distincts :
 
-- **Les membres et parents actuels** : retrouver les informations pratiques (planning, lieux, convocations, résultats)
+- **Les membres et parents actuels** : retrouver les informations pratiques (planning, lieux, résultats)
 - **Les personnes souhaitant rejoindre le club** : découvrir le club, les équipes, s'inscrire
 
-Le site doit pouvoir être **géré au quotidien par des responsables du club sans compétences techniques**, via un espace d'administration clair et simple. Les tâches plus complexes (configuration, intégrations) seront assurées par un technicien. Le site doit être consultable aisément sur smartphone, la partie backoffice pouvant être gérées uniquement sur ordinateur. Il est important que les convocations, les réponses aux convocations, les plannings, les lieux d'entrainement soit accessible sur des ecrans de smartphone. Les joueurs mineurs doivent être représentés par leurs parents, il faut donc prévoir qu'un parent puisse répondre pour plusieurs joueurs, notamment sur les convocations.
+Le site doit pouvoir être **géré au quotidien par des responsables du club sans compétences techniques**, via un espace d'administration clair et simple. Les tâches plus complexes (configuration, intégrations) seront assurées par un technicien. Le site doit être consultable aisément sur smartphone — en particulier les plannings et les lieux d'entraînement. La partie back-office est réservée à un usage desktop.
 
 ---
 
@@ -93,7 +93,7 @@ Le site est découpé en **modules indépendants**, développés et mis en ligne
 | **Présentation du club**    | Lecture (texte riche)              | Éditer le contenu                                       |
 | **Bureau & CA**             | Lecture (organigramme)             | Gérer les membres, rôles, photos, ordre                 |
 | **Commissions**             | Lecture                            | Gérer les commissions et leurs membres                  |
-| **Entraîneurs & arbitres**  | Lecture                            | Gérer les profils (liés aux comptes utilisateurs)       |
+| **Entraîneurs & arbitres**  | Lecture                            | Gérer les profils (contenu — pas de compte utilisateur) |
 
 **Rubrique "Infos pratiques"** — fonctionnel
 
@@ -122,7 +122,7 @@ Quatre sous-pages gérées indépendamment dans Filament :
 1. **Présentation du club** : contenu texte riche (éditeur WYSIWYG dans Filament), une seule entrée éditable.
 2. **Bureau et Conseil d'Administration** : liste de `BoardMember` avec rôle, photo et ordre. Affiché sous forme d'**organigramme** côté Vue.js (composant visuel hiérarchique configurable). Une entrée peut être liée à un `User` existant (optionnel).
 3. **Commissions** : liste de `Commission` avec nom, description et membres (saisis en texte libre, pas de compte utilisateur requis).
-4. **Entraîneurs & arbitres** : liste des utilisateurs ayant le rôle `coach` ou `arbitre`, avec leur(s) catégorie(s) assignée(s) et une bio courte. Alimenté automatiquement depuis les `CoachAssignment` et les rôles utilisateurs.
+4. **Entraîneurs & arbitres** : liste des `StaffMember` — entraîneurs et arbitres du club, avec leur type, catégories (texte libre) et bio courte. Contenu géré dans Filament, sans compte utilisateur associé.
 
 ### Module demande de cours d'essai — détail
 
@@ -224,12 +224,12 @@ app/
 │   │   └── ...
 │   └── Requests/           ← Validation des données reçues (formulaires)
 ├── Models/                 ← Représentation des données (voir section suivante)
-├── Notifications/          ← Emails automatiques (convocations, demandes d'essai...)
+├── Notifications/          ← Emails automatiques (demandes d'essai, notifications admin...)
 ├── Services/
 │   └── ScorencoService.php ← Connexion à l'API Scorenco + mise en cache
 └── Filament/Resources/     ← Écrans du back-office admin
 routes/
-├── web.php                 ← Toutes les routes du site (publiques + membres)
+├── web.php                 ← Toutes les routes du site (entièrement publiques)
 └── (pas d'api.php nécessaire pour le frontend Inertia)
 ```
 
@@ -245,7 +245,7 @@ Inertia utilise l'**authentification par session Laravel** — le mécanisme sta
 
 > **C'est quoi un modèle de données ?** C'est la représentation en code d'une "table" dans la base de données. Par exemple, un modèle `User` correspond à la table des utilisateurs. **Eloquent** est le système Laravel qui fait le lien entre le code PHP et la base MySQL — il permet d'écrire `User::find(1)` plutôt que de rédiger du SQL brut.
 
-> **C'est quoi une "relation" entre modèles ?** Comme dans Excel, une ligne d'une table peut être liée à une ligne d'une autre table. Par exemple, un `Player` appartient à une `Team`, et une `Team` a plusieurs `Player`.
+> **C'est quoi une "relation" entre modèles ?** Comme dans Excel, une ligne d'une table peut être liée à une ligne d'une autre table. Par exemple, un `Player` appartient à une `Category`, et une `Category` a plusieurs `Player`.
 
 ### Gestion des rôles utilisateur
 
@@ -297,12 +297,14 @@ Pour éviter de saisir chaque joueur à la main, le back-office Filament permett
 ### Schéma des relations principales
 
 ```
-Season ──── Category ──────────────────────────── Team (scorenco_id)
+Season ──── Category ──────────────────── Team (scorenco_id)
                 │
-    ┌───────────┼──────────────────┐
-  Player   TrainingSession    StaffMember
-               │
-             Venue
+    ┌───────────┴──────────────────┐
+  Player                    TrainingSession
+                                   │
+                                 Venue
+
+StaffMember  BoardMember  Commission  (contenu standalone, sans relation DB)
 ```
 
 ---
@@ -386,7 +388,7 @@ Le back-office Filament est accessible à `http://localhost:8000/admin`.
 
 - **Cache** : `CACHE_DRIVER=file` dans le `.env` de production (pas de Redis)
 - **Emails** : configuration SMTP via un service externe (Brevo / Mailgun — offre gratuite suffisante pour un club)
-- **Convocations** : les emails sont envoyés via la queue traitée par le cron — délai max 1 minute acceptable
+- **Emails** (demandes d'essai, notifications) : envoyés via la queue traitée par le cron — délai max 1 minute acceptable
 - **Sessions** : stockées en fichiers (driver `file`) ou en base MySQL
 
 ### Procédure de déploiement
