@@ -105,16 +105,15 @@ Le site est découpé en **modules indépendants**, développés et mis en ligne
 
 **Autres rubriques**
 
-| Module                    | Public                    | Membre connecté  | Admin Filament                              |
-| ------------------------- | ------------------------- | ---------------- | ------------------------------------------- |
-| **Actualités**            | Lecture                   | —                | Créer / modifier / supprimer                |
-| **Catégories & équipes**  | Lecture (1 page/catégorie)| —                | Gérer saisons, catégories, équipes, joueurs |
-| **Calendrier des matchs** | Via Scorenco (par équipe) | —                | —                                           |
-| **Résultats**             | Via Scorenco (par équipe) | —                | —                                           |
-| **Convocations**          | —                         | Voir et répondre | Créer et envoyer                            |
-| **Galerie photos**        | Lecture                   | —                | Upload et organisation                      |
-| **Boutique**              | Voir + lien HelloAsso     | —                | Gérer les articles                          |
-| **Partenaires / sponsors**| Lecture                   | —                | Gérer les partenaires                       |
+| Module                    | Public                    | Admin Filament                        |
+| ------------------------- | ------------------------- | ------------------------------------- |
+| **Actualités**            | Lecture                   | Créer / modifier / supprimer          |
+| **Catégories & équipes**  | Lecture (1 page/catégorie)| Gérer saisons, catégories, équipes    |
+| **Calendrier des matchs** | Via Scorenco (par équipe) | —                                     |
+| **Résultats**             | Via Scorenco (par équipe) | —                                     |
+| **Galerie photos**        | Lecture                   | Upload et organisation                |
+| **Boutique**              | Voir + lien HelloAsso     | Gérer les articles                    |
+| **Partenaires / sponsors**| Lecture                   | Gérer les partenaires                 |
 
 ### Module "Le Club" — détail
 
@@ -138,17 +137,6 @@ Formulaire public accessible sans connexion :
 - Liste des créneaux par catégorie (jour, heure, lieu)
 - **Carte interactive** (Google Maps ou Leaflet/OpenStreetMap) affichant les gymnases (`Venue`) avec leur adresse — clic sur un marqueur pour voir les créneaux associés
 
-### Module convocations — approche envisagée
-
-> Ce module est le plus complexe. Son fonctionnement précis sera affiné lors de son itération de développement dédiée.
-
-Inspiré de **SportEasy** (outil de gestion d'équipes sportives) dans une version simplifiée :
-
-- Un coach ou admin crée une convocation (match ou entraînement) pour une équipe
-- Les joueurs concernés reçoivent un **email avec lien de réponse** (présent / absent / incertain)
-- Le coach voit en temps réel le **récap des réponses** dans son espace admin
-- Les joueurs accèdent à leurs convocations depuis leur **espace membre** sur le site
-
 ---
 
 ## 5. Structure du frontend (Vue.js + Inertia.js)
@@ -162,8 +150,7 @@ resources/
 ├── js/
 │   ├── app.js                     ← Point d'entrée Inertia
 │   ├── layouts/
-│   │   ├── MainLayout.vue         ← Layout public (header, footer, nav)
-│   │   └── MemberLayout.vue       ← Layout espace membre (menu connecté)
+│   │   └── MainLayout.vue         ← Layout public (header, footer, nav)
 │   ├── components/                ← Composants Vue réutilisables (cartes, boutons, carte...)
 │   └── pages/                     ← Une page Vue par route
 │       ├── Home.vue
@@ -186,10 +173,7 @@ resources/
 │       │   └── Show.vue           ← Page d'une catégorie
 │       ├── Boutique.vue
 │       ├── Galerie.vue
-│       ├── Partenaires.vue
-│       └── EspaceMembre/
-│           ├── Index.vue          ← Tableau de bord membre
-│           └── Convocations.vue
+│       └── Partenaires.vue
 ├── css/
 │   └── app.css
 └── views/
@@ -217,12 +201,10 @@ resources/
 | `/boutique`                            | Articles + liens HelloAsso                               |
 | `/galerie`                             | Galerie photos                                           |
 | `/partenaires`                         | Sponsors et partenaires                                  |
-| `/espace-membre`                       | Convocations, profil (accès restreint)                   |
 
 > Pas de page dédiée par équipe individuelle à ce stade — la page catégorie agrège tout. À réévaluer si une catégorie a beaucoup d'équipes.
 
 - Les routes sont définies dans `routes/web.php` (Laravel), pas dans un fichier frontend séparé.
-- L'`espace-membre` est protégé par un **middleware** Laravel : seul un utilisateur connecté peut y accéder.
 - La navigation entre pages se fait sans rechargement complet (Inertia intercepte les clics et charge uniquement les nouvelles données).
 
 ---
@@ -239,10 +221,8 @@ app/
 │   ├── Controllers/        ← Un controller par page (retourne une vue Inertia)
 │   │   ├── ActualitesController.php
 │   │   ├── EquipesController.php
-│   │   ├── ConvocationsController.php
 │   │   └── ...
-│   ├── Requests/           ← Validation des données reçues (formulaires)
-│   └── Middleware/         ← Protection des routes membres
+│   └── Requests/           ← Validation des données reçues (formulaires)
 ├── Models/                 ← Représentation des données (voir section suivante)
 ├── Notifications/          ← Emails automatiques (convocations, demandes d'essai...)
 ├── Services/
@@ -255,9 +235,9 @@ routes/
 
 ### Authentification
 
-Inertia utilise l'**authentification par session Laravel** — le mécanisme standard de PHP. Après identification (email + mot de passe), Laravel crée une session côté serveur. Plus simple et plus sécurisé qu'un système de tokens : pas de token à stocker côté client, pas de refresh à gérer.
+L'authentification est réservée aux administrateurs du back-office Filament. Le site public est entièrement accessible sans connexion.
 
-> Pas besoin de Sanctum pour le frontend. Sanctum pourrait être utilisé ultérieurement si une API externe (application mobile, intégration tierce) devait consommer les données.
+Inertia utilise l'**authentification par session Laravel** — le mécanisme standard de PHP. Après identification (email + mot de passe), Laravel crée une session côté serveur. Plus simple et plus sécurisé qu'un système de tokens : pas de token à stocker côté client, pas de refresh à gérer.
 
 ---
 
@@ -269,43 +249,32 @@ Inertia utilise l'**authentification par session Laravel** — le mécanisme sta
 
 ### Gestion des rôles utilisateur
 
-> Un même utilisateur peut cumuler plusieurs rôles simultanément. Exemple : coach des U15 Garçons, joueur en Seniors, et membre du CA.
-
-La gestion des rôles s'appuie sur **Spatie laravel-permission**, la librairie de référence pour Laravel. Chaque `User` peut se voir attribuer un ou plusieurs rôles :
+La gestion des rôles s'appuie sur **Spatie laravel-permission**, la librairie de référence pour Laravel. Le site public est entièrement public (aucune connexion requise). Seuls deux rôles existent, pour l'accès au back-office Filament :
 
 | Rôle | Description |
 |---|---|
 | `super_admin` | Accès total au back-office, configuration technique |
-| `admin` | Gestionnaire du club (actualités, équipes, convocations…) |
-| `coach` | Entraîneur — peut créer des convocations pour ses catégories |
-| `arbitre` | Arbitre du club — affiché sur la page entraîneurs/arbitres |
-| `joueur` | Membre joueur — accès à l'espace membre |
-| `parent` | Tuteur d'un ou plusieurs joueurs mineurs — répond aux convocations en leur nom |
-
-Un utilisateur peut avoir `coach` + `joueur` + `admin` en même temps. Les permissions dans l'application s'appliquent selon le rôle actif.
+| `admin` | Gestionnaire du club (actualités, équipes, galerie, partenaires…) |
 
 ### Modèles prévus
 
-| Modèle                | Table MySQL             | Description                                                                                                                                                                                                                   |
-| --------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `User`                | `users`                 | Tous les utilisateurs du site. Contient email, mot de passe, prénom, nom, date de naissance. Les rôles sont gérés via Spatie (table séparée).                                                                                 |
-| `Season`              | `seasons`               | Une saison sportive (ex: "2026-2027"). Contient les dates de début/fin et un flag `is_current`.                                                                                                                               |
-| `Category`            | `categories`            | Une catégorie d'âge et de genre pour une saison donnée. Ex : "U13 Féminines 2026-2027". Contient le nom, le genre (M/F/Mixte), les années de naissance éligibles (`birth_year_min`, `birth_year_max`), et la saison associée. |
-| `Team`                | `teams`                 | Une équipe au sein d'une catégorie. Ex : "Équipe 1" dans U13 Féminines. Contient un identifiant Scorenco pour récupérer son calendrier/résultats.                                                                             |
-| `Player`              | `players`               | Lien entre un `User` (rôle `joueur`) et une `Category` pour une saison. C'est ce rattachement qui détermine qui reçoit les convocations.                                                                                     |
-| `CoachAssignment`     | `coach_assignments`     | Lien entre un `User` (rôle `coach`) et une `Category`. Un coach peut être assigné à plusieurs catégories.                                                                                                                    |
-| `Guardian`            | `guardians`             | Lien entre un `User` (rôle `parent`) et un ou plusieurs `User` joueurs mineurs qu'il représente. Permet de répondre aux convocations au nom de ses enfants.                                                                  |
-| `BoardMember`         | `board_members`         | Entrée d'organigramme : rôle au sein du CA/bureau, photo, ordre d'affichage. Peut être lié optionnellement à un `User` existant.                                                                                             |
-| `Commission`          | `commissions`           | Une commission du club : nom, description, liste de membres (noms en texte libre).                                                                                                                                            |
-| `TrialRequest`        | `trial_requests`        | Demande de cours d'essai : nom, prénom, âge, créneau souhaité, statut (nouveau / contacté / validé / refusé).                                                                                                                |
-| `News`                | `news`                  | Un article d'actualité : titre, contenu, date, image.                                                                                                                                                                         |
-| `Photo`               | `photos`                | Une photo de galerie, associée à un album ou une catégorie.                                                                                                                                                                   |
-| `Partner`             | `partners`              | Un sponsor ou partenaire : logo, nom, lien, niveau de partenariat.                                                                                                                                                            |
-| `Product`             | `products`              | Un article de la boutique : nom, description, image, lien HelloAsso.                                                                                                                                                          |
-| `TrainingSession`     | `training_sessions`     | Un créneau d'entraînement récurrent ou ponctuel : jour, heure, catégorie, lieu.                                                                                                                                               |
-| `Venue`               | `venues`                | Un lieu d'entraînement ou de match : nom, adresse, coordonnées GPS.                                                                                                                                                           |
-| `Convocation`         | `convocations`          | Une convocation pour un match ou entraînement : catégorie ou équipe ciblée, date, lieu, type.                                                                                                                                 |
-| `ConvocationResponse` | `convocation_responses` | La réponse à une convocation : présent / absent / incertain. Liée à un `User` (joueur ou parent répondant au nom d'un joueur).                                                                                               |
+| Modèle            | Table MySQL         | Description                                                                                                                                                                                                                   |
+| ----------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `User`            | `users`             | Administrateurs du back-office. Contient email, mot de passe, prénom, nom. Les rôles sont gérés via Spatie (table séparée).                                                                                                   |
+| `Season`          | `seasons`           | Une saison sportive (ex: "2026-2027"). Contient les dates de début/fin et un flag `is_current`.                                                                                                                               |
+| `Category`        | `categories`        | Une catégorie d'âge et de genre pour une saison donnée. Ex : "U13 Féminines 2026-2027". Contient le nom, le genre (M/F/Mixte), les années de naissance éligibles (`birth_year_min`, `birth_year_max`), et la saison associée. |
+| `Team`            | `teams`             | Une équipe au sein d'une catégorie. Ex : "Équipe 1" dans U13 Féminines. Contient un identifiant Scorenco pour récupérer son calendrier/résultats.                                                                             |
+| `Player`          | `players`           | Un joueur du club : prénom, nom, date de naissance, photo, catégorie. Contenu pur (pas de compte utilisateur) — alimenté via import CSV, affiché dans la galerie par équipe.                                                 |
+| `StaffMember`     | `staff_members`     | Un entraîneur ou arbitre du club : nom, type (coach/arbitre), photo, bio courte, catégories en texte libre. Contenu géré dans Filament, affiché sur la page Entraîneurs & Arbitres.                                          |
+| `BoardMember`     | `board_members`     | Entrée d'organigramme : rôle au sein du CA/bureau, photo, ordre d'affichage.                                                                                                                                                  |
+| `Commission`      | `commissions`       | Une commission du club : nom, description, liste de membres (noms en texte libre).                                                                                                                                            |
+| `TrialRequest`    | `trial_requests`    | Demande de cours d'essai : nom, prénom, âge, créneau souhaité, statut (nouveau / contacté / validé / refusé).                                                                                                                |
+| `News`            | `news`              | Un article d'actualité : titre, contenu, date, image.                                                                                                                                                                         |
+| `Photo`           | `photos`            | Une photo de galerie, associée à un album ou une catégorie.                                                                                                                                                                   |
+| `Partner`         | `partners`          | Un sponsor ou partenaire : logo, nom, lien, niveau de partenariat.                                                                                                                                                            |
+| `Product`         | `products`          | Un article de la boutique : nom, description, image, lien HelloAsso.                                                                                                                                                          |
+| `TrainingSession` | `training_sessions` | Un créneau d'entraînement récurrent ou ponctuel : jour, heure, catégorie, lieu.                                                                                                                                               |
+| `Venue`           | `venues`            | Un lieu d'entraînement ou de match : nom, adresse, coordonnées GPS.                                                                                                                                                           |
 
 ### Gestion des catégories et des saisons
 
@@ -323,19 +292,17 @@ Les années de naissance éligibles sont **saisies manuellement** par un admin l
 
 ### Import des joueurs par CSV
 
-Pour éviter de saisir chaque joueur à la main, le back-office Filament permettra d'**importer une liste de joueurs via un fichier CSV**. Le fichier contiendra au minimum : prénom, nom, date de naissance, email. Le système attribuera automatiquement chaque joueur à la catégorie correspondant à son année de naissance pour la saison en cours.
+Pour éviter de saisir chaque joueur à la main, le back-office Filament permettra d'**importer une liste de joueurs via un fichier CSV**. Le fichier contiendra au minimum : prénom, nom, date de naissance, photo (optionnelle). Le système attribuera automatiquement chaque joueur à la catégorie correspondant à son année de naissance pour la saison en cours. Les joueurs sont du **contenu pur** (pas de compte utilisateur) — ils sont affichés dans la galerie de l'équipe sur la page catégorie.
 
 ### Schéma des relations principales
 
 ```
-Season ──── Category ──────────────────────────────────── Team (scorenco_id)
+Season ──── Category ──────────────────────────── Team (scorenco_id)
                 │
-    ┌───────────┼─────────────────┬──────────────────┐
-  Player   CoachAssignment  TrainingSession      Convocation
-    │            │               │                   │
-  User ──────────┘             Venue       ConvocationResponse ── User
-    │
-  Guardian ── User (joueur mineur)
+    ┌───────────┼──────────────────┐
+  Player   TrainingSession    StaffMember
+               │
+             Venue
 ```
 
 ---
@@ -448,11 +415,9 @@ Chaque itération produit une version fonctionnelle et déployable.
 2. **Contenu éditorial** : actualités, galerie, partenaires
 3. **Club** : saisons, catégories, équipes, joueurs (+ import CSV), lieux, planning entraînements, infos pratiques (bureau, commissions, entraîneurs/arbitres)
 4. **Calendrier & résultats** : intégration Scorenco par équipe, affiché sur les pages catégories
-5. **Espace membre** : connexion joueurs et parents, profil, liaison tuteur/joueur
-6. **Convocations** : création, envoi email, réponses, récap (inspiré SportEasy simplifié)
-7. **Boutique & inscriptions** : articles HelloAsso, formulaire d'essai
-8. **Déploiement OVH WebCloud** : configuration hébergement, mise en production, SMTP, cron
-9. **Polish** : design final, responsive mobile, CI/CD GitHub Actions
+5. **Boutique & inscriptions** : articles HelloAsso, formulaire d'essai
+6. **Déploiement OVH WebCloud** : configuration hébergement, mise en production, SMTP, cron
+7. **Polish** : design final, responsive mobile, CI/CD GitHub Actions
 
 ---
 
@@ -460,7 +425,6 @@ Chaque itération produit une version fonctionnelle et déployable.
 
 - [ ] Nom de domaine définitif (`tc2v-hb.fr` ou autre)
 - [ ] Identifiants et scope de l'API Scorenco pour ce club
-- [ ] Fonctionnement détaillé des convocations (notifications SMS ? application mobile ?)
 - [ ] Charte graphique : couleurs officielles du club, logo haute résolution
 - [ ] Contenu initial : textes de présentation, photos, liste des équipes
 
