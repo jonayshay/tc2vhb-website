@@ -430,7 +430,14 @@ Chaque itération produit une version fonctionnelle et déployable.
 
 - [ ] Nom de domaine définitif (`tc2v-hb.fr` ou autre)
 - [ ] Identifiants et scope de l'API Scorenco pour ce club
-- [ ] Charte graphique : couleurs officielles du club, logo haute résolution
+- [ ] Logo haute résolution (à fournir)
+- [x] Charte graphique — palette officielle :
+  | Rôle | Pantone | HEX | RGB |
+  |---|---|---|---|
+  | Bleu principal | Pantone 540 C | `#003A5D` | (0, 58, 93) |
+  | Bleu secondaire | Pantone 5405 C | `#5B7F95` | (91, 127, 149) |
+  | Gris | Pantone 430 C | `#7C878E` | (124, 135, 142) |
+  | Blanc | — | `#FFFFFF` | (255, 255, 255) |
 - [ ] Contenu initial : textes de présentation, photos, liste des équipes
 
 ---
