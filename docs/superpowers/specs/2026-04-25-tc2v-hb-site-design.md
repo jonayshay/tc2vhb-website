@@ -121,7 +121,7 @@ Quatre sous-pages gérées indépendamment dans Filament :
 
 1. **Présentation du club** : contenu texte riche (éditeur WYSIWYG dans Filament), une seule entrée éditable.
 2. **Bureau et Conseil d'Administration** : liste de `BoardMember` avec rôle, photo et ordre. Affiché sous forme d'**organigramme** côté Vue.js (composant visuel hiérarchique configurable). Une entrée peut être liée à un `User` existant (optionnel).
-3. **Commissions** : liste de `Commission` avec nom, description et membres (saisis en texte libre, pas de compte utilisateur requis).
+3. **Commissions** : liste de `Commission` avec nom et description. Chaque commission a des `CommissionMember` : nom, photo, rôle au sein de la commission, ordre d'affichage.
 4. **Entraîneurs & arbitres** : liste des `StaffMember` — entraîneurs et arbitres du club, avec leur type, catégories (texte libre) et bio courte. Contenu géré dans Filament, sans compte utilisateur associé.
 
 ### Module demande de cours d'essai — détail
@@ -267,7 +267,8 @@ La gestion des rôles s'appuie sur **Spatie laravel-permission**, la librairie d
 | `Player`          | `players`           | Un joueur du club : prénom, nom, date de naissance, photo, catégorie. Contenu pur (pas de compte utilisateur) — alimenté via import CSV, affiché dans la galerie par équipe.                                                 |
 | `StaffMember`     | `staff_members`     | Un entraîneur ou arbitre du club : nom, type (coach/arbitre), photo, bio courte, catégories en texte libre. Contenu géré dans Filament, affiché sur la page Entraîneurs & Arbitres.                                          |
 | `BoardMember`     | `board_members`     | Entrée d'organigramme : rôle au sein du CA/bureau, photo, ordre d'affichage.                                                                                                                                                  |
-| `Commission`      | `commissions`       | Une commission du club : nom, description, liste de membres (noms en texte libre).                                                                                                                                            |
+| `Commission`      | `commissions`       | Une commission du club : nom, description.                                                                                                                                                                                    |
+| `CommissionMember`| `commission_members`| Membre d'une commission : nom, photo, rôle au sein de la commission, ordre d'affichage. Lié à une `Commission`.                                                                                                              |
 | `TrialRequest`    | `trial_requests`    | Demande de cours d'essai : nom, prénom, âge, créneau souhaité, statut (nouveau / contacté / validé / refusé).                                                                                                                |
 | `News`            | `news`              | Un article d'actualité : titre, contenu, date, image.                                                                                                                                                                         |
 | `Photo`           | `photos`            | Une photo de galerie, associée à un album ou une catégorie.                                                                                                                                                                   |
@@ -304,7 +305,9 @@ Season ──── Category ─────────────────
                                    │
                                  Venue
 
-StaffMember  BoardMember  Commission  (contenu standalone, sans relation DB)
+Commission ── CommissionMember
+
+StaffMember  BoardMember  (contenu standalone, sans relation DB)
 ```
 
 ---
