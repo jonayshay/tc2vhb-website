@@ -75,7 +75,7 @@ Fonctionnalités :
 Champs dans l'ordre d'affichage :
 
 1. **`title`** — `TextInput`, requis. Déclenche la génération du slug en live si le slug n'a pas encore été modifié manuellement.
-2. **`slug`** — `TextInput`, requis, unique. Pré-rempli automatiquement, modifiable manuellement.
+2. **`slug`** — `TextInput`, requis, unique. Pré-rempli automatiquement, modifiable manuellement. **Verrouillé en lecture seule** (`disabled`) une fois l'article publié (`published_at` non null) pour préserver les URLs existantes.
 3. **`status`** — `Select`, options : Brouillon / Publié / Archivé. Valeur par défaut : Brouillon.
 4. **`featured_image`** — `FileUpload`, accepte JPEG/PNG/WebP, stocké dans `storage/app/public/news/featured/`, nullable.
 5. **`content`** — `TiptapEditor` (package `awcodes/filament-tiptap-editor`), requis. L'upload d'images inline est activé, stocké dans `storage/app/public/news/content/`.
