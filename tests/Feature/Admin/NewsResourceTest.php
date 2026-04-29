@@ -42,4 +42,13 @@ class NewsResourceTest extends TestCase
     {
         $this->get('/admin/news')->assertRedirect('/admin/login');
     }
+
+    public function test_authenticated_user_without_role_cannot_access_news_list(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/admin/news')
+            ->assertForbidden();
+    }
 }

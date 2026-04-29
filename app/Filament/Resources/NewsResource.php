@@ -56,6 +56,7 @@ class NewsResource extends Resource
             Forms\Components\FileUpload::make('featured_image')
                 ->label('Image à la une')
                 ->image()
+                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                 ->directory('news/featured')
                 ->disk('public')
                 ->nullable(),

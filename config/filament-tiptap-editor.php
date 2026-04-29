@@ -65,7 +65,7 @@ return [
     */
     'accepted_file_types' => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     'disk' => 'public',
-    'directory' => 'news',
+    'directory' => 'news/content',
     'visibility' => 'public',
     'preserve_file_names' => false,
     'max_file_size' => 2042,
