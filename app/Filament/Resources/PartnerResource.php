@@ -27,7 +27,9 @@ class PartnerResource extends Resource
 
             Forms\Components\FileUpload::make('logo')
                 ->label('Logo')
+                ->image()
                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'])
+                ->maxSize(2048)
                 ->directory('partners/logos')
                 ->disk('public')
                 ->nullable(),
@@ -35,16 +37,18 @@ class PartnerResource extends Resource
             Forms\Components\TextInput::make('url')
                 ->label('Site web')
                 ->url()
+                ->maxLength(255)
                 ->nullable(),
 
             Forms\Components\Textarea::make('description')
                 ->label('Description')
+                ->columnSpanFull()
                 ->nullable(),
 
             Forms\Components\TextInput::make('sort_order')
                 ->label('Ordre')
                 ->numeric()
-                ->default(fn () => Partner::max('sort_order') + 1),
+                ->default(fn () => (Partner::max('sort_order') ?? 0) + 1),
         ]);
     }
 
@@ -65,7 +69,8 @@ class PartnerResource extends Resource
                 Tables\Columns\TextColumn::make('url')
                     ->label('URL')
                     ->url(fn (?string $state): ?string => $state)
-                    ->openUrlInNewTab(),
+                    ->openUrlInNewTab()
+                    ->placeholder('—'),
 
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Ordre')
