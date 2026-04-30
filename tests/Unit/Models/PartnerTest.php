@@ -12,13 +12,19 @@ class PartnerTest extends TestCase
 
     public function test_partner_can_be_created_with_required_fields(): void
     {
-        $partner = Partner::factory()->create([
+        Partner::factory()->create([
             'name' => 'Sponsor Principal',
+            'logo' => null,
+            'url' => null,
+            'description' => null,
             'sort_order' => 1,
         ]);
 
         $this->assertDatabaseHas('partners', [
             'name' => 'Sponsor Principal',
+            'logo' => null,
+            'url' => null,
+            'description' => null,
             'sort_order' => 1,
         ]);
     }
