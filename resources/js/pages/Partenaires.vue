@@ -1,3 +1,12 @@
+<script setup>
+defineProps({
+    partenaires: {
+        type: Array,
+        required: true,
+    },
+});
+</script>
+
 <template>
     <div>
         <h1>Nos Partenaires</h1>
@@ -12,29 +21,23 @@
                 :key="partner.id"
                 class="partner-card"
             >
-                <a
-                    v-if="partner.url"
-                    :href="partner.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        v-if="partner.logo"
-                        :src="'/storage/' + partner.logo"
-                        :alt="partner.name"
-                    />
-                    <span v-else>{{ partner.name }}</span>
-                </a>
-                <template v-else>
-                    <img
-                        v-if="partner.logo"
-                        :src="'/storage/' + partner.logo"
-                        :alt="partner.name"
-                    />
-                    <span v-else>{{ partner.name }}</span>
-                </template>
+                <img
+                    v-if="partner.logo"
+                    :src="`/storage/${partner.logo}`"
+                    :alt="partner.name"
+                    class="partner-logo"
+                />
 
-                <p class="partner-name">{{ partner.name }}</p>
+                <p class="partner-name">
+                    <a
+                        v-if="partner.url"
+                        :href="partner.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >{{ partner.name }}</a>
+                    <template v-else>{{ partner.name }}</template>
+                </p>
+
                 <p v-if="partner.description" class="partner-description">
                     {{ partner.description }}
                 </p>
@@ -42,15 +45,6 @@
         </div>
     </div>
 </template>
-
-<script setup>
-defineProps({
-    partenaires: {
-        type: Array,
-        required: true,
-    },
-});
-</script>
 
 <style scoped>
 .partners-grid {
@@ -81,7 +75,7 @@ defineProps({
     border-radius: 0.5rem;
 }
 
-.partner-card img {
+.partner-logo {
     max-width: 120px;
     max-height: 80px;
     object-fit: contain;
