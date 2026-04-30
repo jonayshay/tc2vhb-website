@@ -35,4 +35,16 @@ class PartnerObserverTest extends TestCase
 
         $this->assertEquals(10, $partner->fresh()->sort_order);
     }
+
+    public function test_sort_order_of_0_is_treated_as_not_set(): void
+    {
+        Partner::factory()->create(['sort_order' => 5]);
+
+        $partner = Partner::create(['name' => 'Partenaire Zéro', 'sort_order' => 0]);
+
+        // sort_order = 0 est traité comme "non défini" → l'observer l'auto-incrémente
+        // Comportement: max(5) + 1 = 6
+        // Note: 0 n'est pas une valeur métier valide pour sort_order (l'ordre commence à 1)
+        $this->assertEquals(6, $partner->fresh()->sort_order);
+    }
 }

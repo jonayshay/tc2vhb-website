@@ -8,7 +8,7 @@ class PartnerObserver
 {
     public function creating(Partner $partner): void
     {
-        if (empty($partner->sort_order)) {
+        if ($partner->sort_order === null || $partner->sort_order === 0) {
             $partner->sort_order = Partner::max('sort_order') + 1;
         }
     }
