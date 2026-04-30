@@ -72,7 +72,7 @@ class ManageClubPresentation extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        ClubPresentation::first()->update($data);
+        ClubPresentation::updateOrCreate(['id' => 1], $data);
 
         Notification::make()
             ->title('Enregistré avec succès')
