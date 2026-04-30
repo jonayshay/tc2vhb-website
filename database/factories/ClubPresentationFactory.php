@@ -9,7 +9,7 @@ class ClubPresentationFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => 'Présentation du club',
+            'title' => $this->faker->sentence(4),
             'accroche' => $this->faker->sentence(),
             'featured_image' => null,
             'content' => '<p>' . $this->faker->paragraph() . '</p>',
