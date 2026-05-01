@@ -28,3 +28,4 @@ Thumbs.db
 /public/vendor/
 /resources/views/vendor/
 /lang/vendor/
+.superpowers/
