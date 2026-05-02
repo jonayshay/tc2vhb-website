@@ -22,7 +22,7 @@ defineProps({
                 {{ commission.description }}
             </p>
 
-            <div v-if="commission.members.length > 0" class="staff-grid">
+            <div v-if="commission.members?.length > 0" class="staff-grid">
                 <div
                     v-for="membre in commission.members"
                     :key="membre.id"
@@ -39,7 +39,7 @@ defineProps({
                     </div>
 
                     <p class="staff-name">{{ membre.name }}</p>
-                    <p class="staff-role">{{ membre.role }}</p>
+                    <p v-if="membre.role" class="staff-role">{{ membre.role }}</p>
                     <p v-if="membre.bio" class="staff-bio">{{ membre.bio }}</p>
                 </div>
             </div>

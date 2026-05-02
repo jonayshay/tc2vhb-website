@@ -32,7 +32,7 @@ defineProps({
                 </div>
 
                 <p class="staff-name">{{ membre.name }}</p>
-                <p class="staff-role">{{ membre.role }}</p>
+                <p v-if="membre.role" class="staff-role">{{ membre.role }}</p>
                 <p v-if="membre.bio" class="staff-bio">{{ membre.bio }}</p>
             </div>
         </div>
