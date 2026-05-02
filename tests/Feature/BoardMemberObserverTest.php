@@ -15,7 +15,7 @@ class BoardMemberObserverTest extends TestCase
         $first = BoardMember::factory()->create(['sort_order' => 0]);
         $second = BoardMember::factory()->create(['sort_order' => 0]);
 
-        $this->assertEquals(1, $first->fresh()->sort_order);
+        $this->assertEquals(1, $first->sort_order);
         $this->assertEquals(2, $second->fresh()->sort_order);
     }
 
