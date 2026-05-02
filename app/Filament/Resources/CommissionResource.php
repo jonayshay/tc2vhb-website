@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 class CommissionResource extends Resource
 {
     protected static ?string $model = Commission::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Commissions';
     protected static ?string $modelLabel = 'Commission';
     protected static ?string $pluralModelLabel = 'Commissions';
@@ -46,6 +46,7 @@ class CommissionResource extends Resource
 
                     Forms\Components\Textarea::make('bio')
                         ->label('Bio')
+                        ->columnSpanFull()
                         ->nullable(),
 
                     Forms\Components\FileUpload::make('photo')
