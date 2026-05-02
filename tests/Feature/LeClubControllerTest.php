@@ -163,4 +163,27 @@ class LeClubControllerTest extends TestCase
                     ->where('commissions.1.name', 'Commission B')
             );
     }
+
+    public function test_membres_dune_commission_sont_tries_par_sort_order(): void
+    {
+        $commission = Commission::factory()->create(['sort_order' => 1]);
+        CommissionMember::factory()->create([
+            'commission_id' => $commission->id,
+            'name' => 'Membre B',
+            'sort_order' => 2,
+        ]);
+        CommissionMember::factory()->create([
+            'commission_id' => $commission->id,
+            'name' => 'Membre A',
+            'sort_order' => 1,
+        ]);
+
+        $this->get('/le-club/commissions')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) =>
+                $page->component('LeClub/Commissions')
+                    ->where('commissions.0.members.0.name', 'Membre A')
+                    ->where('commissions.0.members.1.name', 'Membre B')
+            );
+    }
 }
