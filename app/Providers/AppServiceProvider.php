@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\BoardMember;
 use App\Models\News;
 use App\Models\Partner;
+use App\Observers\BoardMemberObserver;
 use App\Observers\NewsObserver;
 use App\Observers\PartnerObserver;
 use Illuminate\Support\ServiceProvider;
@@ -14,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        BoardMember::observe(BoardMemberObserver::class);
         News::observe(NewsObserver::class);
         Partner::observe(PartnerObserver::class);
     }
