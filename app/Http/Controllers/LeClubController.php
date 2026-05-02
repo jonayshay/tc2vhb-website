@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoardMember;
 use App\Models\ClubPresentation;
+use App\Models\Commission;
 use App\Models\StaffMember;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -39,6 +41,26 @@ class LeClubController extends Controller
 
         return Inertia::render('LeClub/Arbitres', [
             'groupes' => $this->grouperParCategorie($membres),
+        ]);
+    }
+
+    public function bureau(): Response
+    {
+        $membres = BoardMember::orderBy('sort_order')->get();
+
+        return Inertia::render('LeClub/Bureau', [
+            'membres' => $membres,
+        ]);
+    }
+
+    public function commissions(): Response
+    {
+        $commissions = Commission::with(['members' => fn ($q) => $q->orderBy('sort_order')])
+            ->orderBy('sort_order')
+            ->get();
+
+        return Inertia::render('LeClub/Commissions', [
+            'commissions' => $commissions,
         ]);
     }
 

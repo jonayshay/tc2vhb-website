@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
@@ -6,9 +7,11 @@
         <h1>Le Club</h1>
 
         <nav class="club-nav">
-            <a href="/le-club/presentation">Présentation du club</a>
-            <a href="/le-club/entraineurs">Entraîneurs</a>
-            <a href="/le-club/arbitres">Arbitres</a>
+            <Link href="/le-club/presentation">Présentation du club</Link>
+            <Link href="/le-club/bureau">Bureau & Conseil d'Administration</Link>
+            <Link href="/le-club/commissions">Commissions</Link>
+            <Link href="/le-club/entraineurs">Entraîneurs</Link>
+            <Link href="/le-club/arbitres">Arbitres</Link>
         </nav>
     </div>
 </template>
@@ -21,7 +24,7 @@
     margin-top: 2rem;
 }
 
-.club-nav a {
+.club-nav :deep(a) {
     padding: 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;

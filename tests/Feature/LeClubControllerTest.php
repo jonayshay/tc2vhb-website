@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\BoardMember;
 use App\Models\ClubPresentation;
+use App\Models\Commission;
+use App\Models\CommissionMember;
 use App\Models\StaffMember;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -99,6 +102,88 @@ class LeClubControllerTest extends TestCase
                 $page->component('LeClub/Arbitres')
                     ->has('groupes', 1)
                     ->where('groupes.0.membres.0.name', 'Arbitre C')
+            );
+    }
+
+    public function test_bureau_retourne_les_membres_du_bureau(): void
+    {
+        BoardMember::factory()->create(['name' => 'Jean Martin', 'sort_order' => 1]);
+        BoardMember::factory()->create(['name' => 'Marie Dupont', 'sort_order' => 2]);
+
+        $this->get('/le-club/bureau')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) =>
+                $page->component('LeClub/Bureau')
+                    ->has('membres', 2)
+                    ->where('membres.0.name', 'Jean Martin')
+                    ->where('membres.1.name', 'Marie Dupont')
+            );
+    }
+
+    public function test_bureau_retourne_membres_vide_sans_donnees(): void
+    {
+        $this->get('/le-club/bureau')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) =>
+                $page->component('LeClub/Bureau')
+                    ->where('membres', [])
+            );
+    }
+
+    public function test_commissions_retourne_les_commissions_avec_membres(): void
+    {
+        $commission = Commission::factory()->create(['name' => 'Commission sportive', 'sort_order' => 1]);
+        CommissionMember::factory()->create([
+            'commission_id' => $commission->id,
+            'name' => 'Alice',
+            'sort_order' => 1,
+        ]);
+
+        $this->get('/le-club/commissions')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) =>
+                $page->component('LeClub/Commissions')
+                    ->has('commissions', 1)
+                    ->where('commissions.0.name', 'Commission sportive')
+                    ->has('commissions.0.members', 1)
+                    ->where('commissions.0.members.0.name', 'Alice')
+            );
+    }
+
+    public function test_commissions_sont_triees_par_sort_order(): void
+    {
+        Commission::factory()->create(['name' => 'Commission B', 'sort_order' => 2]);
+        Commission::factory()->create(['name' => 'Commission A', 'sort_order' => 1]);
+
+        $this->get('/le-club/commissions')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) =>
+                $page->component('LeClub/Commissions')
+                    ->where('commissions.0.name', 'Commission A')
+                    ->where('commissions.1.name', 'Commission B')
+            );
+    }
+
+    public function test_membres_dune_commission_sont_tries_par_sort_order(): void
+    {
+        $commission = Commission::factory()->create(['sort_order' => 1]);
+        CommissionMember::factory()->create([
+            'commission_id' => $commission->id,
+            'name' => 'Membre B',
+            'sort_order' => 2,
+        ]);
+        CommissionMember::factory()->create([
+            'commission_id' => $commission->id,
+            'name' => 'Membre A',
+            'sort_order' => 1,
+        ]);
+
+        $this->get('/le-club/commissions')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) =>
+                $page->component('LeClub/Commissions')
+                    ->where('commissions.0.members.0.name', 'Membre A')
+                    ->where('commissions.0.members.1.name', 'Membre B')
             );
     }
 }
