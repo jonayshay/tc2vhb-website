@@ -7,6 +7,8 @@
 
         <nav class="club-nav">
             <a href="/le-club/presentation">Présentation du club</a>
+            <a href="/le-club/bureau">Bureau & Conseil d'Administration</a>
+            <a href="/le-club/commissions">Commissions</a>
             <a href="/le-club/entraineurs">Entraîneurs</a>
             <a href="/le-club/arbitres">Arbitres</a>
         </nav>
