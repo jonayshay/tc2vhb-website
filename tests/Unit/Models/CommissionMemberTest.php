@@ -44,4 +44,17 @@ class CommissionMemberTest extends TestCase
 
         $this->assertDatabaseEmpty('commission_members');
     }
+
+    public function test_bio_and_photo_are_nullable(): void
+    {
+        $commission = Commission::factory()->create();
+        $member = CommissionMember::factory()->create([
+            'commission_id' => $commission->id,
+            'bio' => null,
+            'photo' => null,
+        ]);
+
+        $this->assertNull($member->bio);
+        $this->assertNull($member->photo);
+    }
 }
