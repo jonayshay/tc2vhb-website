@@ -32,7 +32,10 @@ class PlayerImportService
                 }
 
                 try {
-                    $birthDate = Carbon::createFromFormat('d/m/Y', $rawDate);
+                    $birthDate = Carbon::parse($rawDate);
+                    if (! $birthDate->isValid()) {
+                        throw new InvalidFormatException("Invalid date: $rawDate");
+                    }
                 } catch (InvalidFormatException) {
                     $skipped++;
                     return;

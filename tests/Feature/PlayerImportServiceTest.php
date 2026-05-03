@@ -31,7 +31,7 @@ class PlayerImportServiceTest extends TestCase
         ]);
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
-               "Dupont;Jean;15/01/2014;M;123456;Oui\n";
+               "Dupont;Jean;2014-01-15;M;123456;Oui\n";
         $path = $this->writeCsv($csv);
 
         $result = (new PlayerImportService())->import($path);
@@ -57,7 +57,7 @@ class PlayerImportServiceTest extends TestCase
         ]);
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
-               "Dupont;Jean;15/01/2014;M;123456;Oui\n";
+               "Dupont;Jean;2014-01-15;M;123456;Oui\n";
         $path = $this->writeCsv($csv);
 
         $result = (new PlayerImportService())->import($path);
@@ -72,7 +72,7 @@ class PlayerImportServiceTest extends TestCase
         Season::factory()->create(['is_current' => true]);
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
-               "Martin;Alice;15/01/1980;F;654321;Non\n";
+               "Martin;Alice;1980-01-15;F;654321;Non\n";
         $path = $this->writeCsv($csv);
 
         $result = (new PlayerImportService())->import($path);
@@ -91,10 +91,10 @@ class PlayerImportServiceTest extends TestCase
         Season::factory()->create(['is_current' => true]);
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
-               "A;B;01/01/2010;M;1;Oui\n" .
-               "C;D;02/01/2010;M;2;Non\n" .
-               "E;F;03/01/2010;M;3;O\n" .
-               "G;H;04/01/2010;M;4;1\n";
+               "A;B;2010-01-01;M;1;Oui\n" .
+               "C;D;2010-01-02;M;2;Non\n" .
+               "E;F;2010-01-03;M;3;O\n" .
+               "G;H;2010-01-04;M;4;1\n";
         $path = $this->writeCsv($csv);
 
         (new PlayerImportService())->import($path);
@@ -122,7 +122,7 @@ class PlayerImportServiceTest extends TestCase
         ]);
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
-               "Durand;Léa;10/05/2012;F;999;Non\n";
+               "Durand;Léa;2012-05-10;F;999;Non\n";
         $path = $this->writeCsv($csv);
 
         (new PlayerImportService())->import($path);
@@ -139,7 +139,7 @@ class PlayerImportServiceTest extends TestCase
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
                "Dupont;Jean;not-a-date;M;1;Non\n" .
-               "Martin;Paul;15/01/2014;M;2;Non\n";
+               "Martin;Paul;2014-01-15;M;2;Non\n";
         $path = $this->writeCsv($csv);
 
         $result = (new PlayerImportService())->import($path);
