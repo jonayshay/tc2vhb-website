@@ -22,7 +22,7 @@ class ListPlayers extends ListRecords
                 ->form([
                     FileUpload::make('csv_file')
                         ->label('Fichier CSV (export FFHandball)')
-                        ->acceptedFileTypes(['text/csv', 'text/plain', 'application/csv'])
+                        ->acceptedFileTypes(['.csv', 'text/csv', 'text/plain', 'application/csv'])
                         ->required()
                         ->storeFiles(false),
                 ])
