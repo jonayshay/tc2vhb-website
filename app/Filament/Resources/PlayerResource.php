@@ -82,13 +82,19 @@ class PlayerResource extends Resource
                     ->label('Naissance')
                     ->date('d/m/Y'),
 
+                Tables\Columns\TextColumn::make('gender')
+                    ->label('Sexe')
+                    ->placeholder('—'),
+
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Catégorie')
                     ->placeholder('—'),
 
-                Tables\Columns\IconColumn::make('has_image_rights')
+                Tables\Columns\TextColumn::make('has_image_rights')
                     ->label('Droit image')
-                    ->boolean(),
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('category_id')
