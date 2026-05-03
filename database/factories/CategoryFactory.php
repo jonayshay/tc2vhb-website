@@ -19,6 +19,7 @@ class CategoryFactory extends Factory
             'name'           => $name,
             'slug'           => Str::slug($name),
             'gender'         => $this->faker->randomElement(['M', 'F', 'Mixte']),
+            'type'           => 'youth',
             'birth_year_min' => 2010,
             'birth_year_max' => 2011,
         ];

@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ReplicateAction;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 
@@ -35,6 +36,12 @@ class CategoryResource extends Resource
                 ->options(['M' => 'Masculins', 'F' => 'Féminines', 'Mixte' => 'Mixte'])
                 ->required(),
 
+            Forms\Components\Select::make('type')
+                ->label('Type')
+                ->options(['youth' => 'Jeunes', 'senior' => 'Séniors', 'loisirs' => 'Loisirs'])
+                ->default('youth')
+                ->required(),
+
             Forms\Components\TextInput::make('name')
                 ->label('Nom')
                 ->required()
@@ -51,13 +58,11 @@ class CategoryResource extends Resource
 
             Forms\Components\TextInput::make('birth_year_min')
                 ->label('Année naissance min')
-                ->numeric()
-                ->required(),
+                ->numeric(),
 
             Forms\Components\TextInput::make('birth_year_max')
                 ->label('Année naissance max')
-                ->numeric()
-                ->required(),
+                ->numeric(),
         ]);
     }
 
@@ -76,9 +81,23 @@ class CategoryResource extends Resource
                 Tables\Columns\TextColumn::make('gender')
                     ->label('Genre'),
 
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Type')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'youth'   => 'Jeunes',
+                        'senior'  => 'Séniors',
+                        'loisirs' => 'Loisirs',
+                        default   => $state,
+                    }),
+
                 Tables\Columns\TextColumn::make('birth_year_min')
                     ->label('Nés entre')
-                    ->formatStateUsing(fn (Category $record): string => "{$record->birth_year_min}–{$record->birth_year_max}"),
+                    ->formatStateUsing(function (Category $record): string {
+                        if ($record->birth_year_min === null && $record->birth_year_max === null) {
+                            return '—';
+                        }
+                        return "{$record->birth_year_min}–{$record->birth_year_max}";
+                    }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('season_id')
@@ -87,6 +106,12 @@ class CategoryResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                ReplicateAction::make()
+                    ->label('Dupliquer')
+                    ->excludeAttributes(['slug'])
+                    ->beforeReplicaSaved(function (Category $replica): void {
+                        $replica->slug = \Illuminate\Support\Str::slug($replica->name) . '-copie';
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ]);
     }

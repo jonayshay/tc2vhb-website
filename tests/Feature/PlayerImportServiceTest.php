@@ -149,4 +149,78 @@ class PlayerImportServiceTest extends TestCase
         $this->assertDatabaseMissing('players', ['last_name' => 'Dupont']);
         $this->assertDatabaseHas('players', ['last_name' => 'Martin']);
     }
+
+    public function test_dirigeant_row_is_skipped(): void
+    {
+        Season::factory()->create(['is_current' => true]);
+
+        $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage;Qualite\n" .
+               "Leblanc;Marc;1975-06-01;M;1;Non;Dirigeant\n" .
+               "Martin;Paul;2014-01-15;M;2;Non;\n";
+        $path = $this->writeCsv($csv);
+
+        $result = (new PlayerImportService())->import($path);
+
+        $this->assertEquals(1, $result['imported']);
+        $this->assertEquals(1, $result['skipped']);
+        $this->assertDatabaseMissing('players', ['last_name' => 'Leblanc']);
+        $this->assertDatabaseHas('players', ['last_name' => 'Martin']);
+    }
+
+    public function test_player_with_no_youth_category_is_assigned_to_senior(): void
+    {
+        $season = Season::factory()->create(['is_current' => true]);
+        $seniorCategory = Category::factory()->create([
+            'season_id'      => $season->id,
+            'type'           => 'senior',
+            'gender'         => 'M',
+            'birth_year_min' => null,
+            'birth_year_max' => null,
+        ]);
+
+        $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage;Qualite\n" .
+               "Dupont;Jean;1985-03-10;M;1;Non;Senior\n";
+        $path = $this->writeCsv($csv);
+
+        $result = (new PlayerImportService())->import($path);
+
+        $this->assertEquals(1, $result['imported']);
+        $this->assertEquals(0, $result['unmatched']);
+        $this->assertDatabaseHas('players', [
+            'last_name'   => 'Dupont',
+            'category_id' => $seniorCategory->id,
+        ]);
+    }
+
+    public function test_player_with_loisir_qualite_is_assigned_to_loisirs(): void
+    {
+        $season = Season::factory()->create(['is_current' => true]);
+        $loisirCategory = Category::factory()->create([
+            'season_id'      => $season->id,
+            'type'           => 'loisirs',
+            'gender'         => 'Mixte',
+            'birth_year_min' => null,
+            'birth_year_max' => null,
+        ]);
+        Category::factory()->create([
+            'season_id'      => $season->id,
+            'type'           => 'senior',
+            'gender'         => 'M',
+            'birth_year_min' => null,
+            'birth_year_max' => null,
+        ]);
+
+        $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage;Qualite\n" .
+               "Duval;Pierre;1990-07-20;M;1;Non;Loisir Hand7/ H4 +16 ans\n";
+        $path = $this->writeCsv($csv);
+
+        $result = (new PlayerImportService())->import($path);
+
+        $this->assertEquals(1, $result['imported']);
+        $this->assertEquals(0, $result['unmatched']);
+        $this->assertDatabaseHas('players', [
+            'last_name'   => 'Duval',
+            'category_id' => $loisirCategory->id,
+        ]);
+    }
 }

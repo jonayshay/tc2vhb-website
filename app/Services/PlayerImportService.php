@@ -26,8 +26,14 @@ class PlayerImportService
                 $gender     = trim($row['sexe'] ?? '');
                 $license    = trim($row['Numero Licence'] ?? '') ?: null;
                 $droitImage = trim($row['DroitImage'] ?? '');
+                $qualite    = trim($row['Qualite'] ?? '');
 
                 if (empty($lastName) || empty($firstName) || empty($rawDate)) {
+                    return;
+                }
+
+                if (stripos($qualite, 'dirigeant') !== false) {
+                    $skipped++;
                     return;
                 }
 
@@ -50,7 +56,8 @@ class PlayerImportService
                     return;
                 }
 
-                $category = $this->findCategory($birthDate->year, $gender);
+                $category = $this->findYouthCategory($birthDate->year, $gender)
+                    ?? $this->findAdultCategory($qualite, $gender);
 
                 if ($category === null) {
                     $unmatched++;
@@ -76,7 +83,7 @@ class PlayerImportService
         ];
     }
 
-    private function findCategory(int $birthYear, string $csvGender): ?Category
+    private function findYouthCategory(int $birthYear, string $csvGender): ?Category
     {
         $genders = match (strtoupper(trim($csvGender))) {
             'M', 'MASCULIN'           => ['M', 'Mixte'],
@@ -88,8 +95,29 @@ class PlayerImportService
             'season',
             fn ($q) => $q->where('is_current', true)
         )
+            ->where('type', 'youth')
             ->where('birth_year_min', '<=', $birthYear)
             ->where('birth_year_max', '>=', $birthYear)
+            ->whereIn('gender', $genders)
+            ->first();
+    }
+
+    private function findAdultCategory(string $qualite, string $csvGender): ?Category
+    {
+        $isLoisirs = stripos($qualite, 'loisir') !== false;
+        $type      = $isLoisirs ? 'loisirs' : 'senior';
+
+        $genders = match (strtoupper(trim($csvGender))) {
+            'M', 'MASCULIN'           => ['M', 'Mixte'],
+            'F', 'FÉMININ', 'FEMININ' => ['F', 'Mixte'],
+            default                   => ['Mixte'],
+        };
+
+        return Category::whereHas(
+            'season',
+            fn ($q) => $q->where('is_current', true)
+        )
+            ->where('type', $type)
             ->whereIn('gender', $genders)
             ->first();
     }

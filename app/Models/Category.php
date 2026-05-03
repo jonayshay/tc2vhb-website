@@ -19,6 +19,12 @@ class Category extends Model
         'gender',
         'birth_year_min',
         'birth_year_max',
+        'type',
+    ];
+
+    protected $casts = [
+        'birth_year_min' => 'integer',
+        'birth_year_max' => 'integer',
     ];
 
     protected static function booted(): void
