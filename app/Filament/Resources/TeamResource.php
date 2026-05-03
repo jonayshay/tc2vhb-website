@@ -45,8 +45,7 @@ class TeamResource extends Resource
                 ->nullable(),
 
             Forms\Components\TextInput::make('scorenco_id')
-                ->label('ID Scorenco')
-                ->nullable(),
+                ->label('ID Scorenco'),
         ]);
     }
 

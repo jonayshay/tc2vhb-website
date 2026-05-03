@@ -27,8 +27,7 @@ class PlayerResource extends Resource
                 ->label('Catégorie')
                 ->options(Category::with('season')->get()->mapWithKeys(
                     fn (Category $c) => [$c->id => "{$c->season->name} — {$c->name}"]
-                ))
-                ->nullable(),
+                )),
 
             Forms\Components\TextInput::make('last_name')
                 ->label('Nom')
@@ -44,12 +43,10 @@ class PlayerResource extends Resource
 
             Forms\Components\TextInput::make('gender')
                 ->label('Sexe')
-                ->placeholder('M ou F')
-                ->nullable(),
+                ->placeholder('M ou F'),
 
             Forms\Components\TextInput::make('license_number')
-                ->label('Numéro de licence')
-                ->nullable(),
+                ->label('Numéro de licence'),
 
             Forms\Components\FileUpload::make('photo')
                 ->label('Photo')
