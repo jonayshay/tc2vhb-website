@@ -54,13 +54,15 @@ class SeasonResource extends Resource
                     ->label('Fin')
                     ->date('d/m/Y'),
 
-                Tables\Columns\IconColumn::make('is_current')
+                Tables\Columns\TextColumn::make('is_current')
                     ->label('Courante')
-                    ->boolean(),
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
             ])
             ->actions([
                 Tables\Actions\Action::make('setCurrent')
-                    ->label('Définir comme courante')
+                    ->label('Définir comme saison courante')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (Season $record): bool => ! $record->is_current)
