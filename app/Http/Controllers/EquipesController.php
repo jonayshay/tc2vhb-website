@@ -31,6 +31,7 @@ class EquipesController extends Controller
             'category' => $category,
             'teams'    => $category->teams()->orderBy('name')->get(),
             'players'  => $category->players()
+                ->select(['id', 'first_name', 'last_name', 'photo', 'has_image_rights'])
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get(),

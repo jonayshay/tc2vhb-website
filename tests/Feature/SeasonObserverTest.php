@@ -38,4 +38,13 @@ class SeasonObserverTest extends TestCase
 
         $this->assertTrue($first->fresh()->is_current);
     }
+
+    public function test_creating_season_with_is_current_clears_other_seasons(): void
+    {
+        $existing = Season::factory()->create(['is_current' => true]);
+
+        Season::factory()->create(['is_current' => true]);
+
+        $this->assertFalse($existing->fresh()->is_current);
+    }
 }
