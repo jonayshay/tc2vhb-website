@@ -132,4 +132,21 @@ class PlayerImportServiceTest extends TestCase
             'category_id' => $femCategory->id,
         ]);
     }
+
+    public function test_row_with_malformed_date_is_skipped(): void
+    {
+        Season::factory()->create(['is_current' => true]);
+
+        $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
+               "Dupont;Jean;not-a-date;M;1;Non\n" .
+               "Martin;Paul;15/01/2014;M;2;Non\n";
+        $path = $this->writeCsv($csv);
+
+        $result = (new PlayerImportService())->import($path);
+
+        $this->assertEquals(1, $result['imported']);
+        $this->assertEquals(1, $result['skipped']);
+        $this->assertDatabaseMissing('players', ['last_name' => 'Dupont']);
+        $this->assertDatabaseHas('players', ['last_name' => 'Martin']);
+    }
 }

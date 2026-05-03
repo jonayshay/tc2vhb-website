@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\Player;
-use App\Models\Season;
 use Carbon\Carbon;
+use Carbon\Exceptions\InvalidFormatException;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
 class PlayerImportService
@@ -31,7 +31,12 @@ class PlayerImportService
                     return;
                 }
 
-                $birthDate = Carbon::createFromFormat('d/m/Y', $rawDate);
+                try {
+                    $birthDate = Carbon::createFromFormat('d/m/Y', $rawDate);
+                } catch (InvalidFormatException) {
+                    $skipped++;
+                    return;
+                }
 
                 if (Player::where('last_name', $lastName)
                     ->where('first_name', $firstName)
