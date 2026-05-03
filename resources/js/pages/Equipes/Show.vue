@@ -34,7 +34,7 @@ defineProps({
                         class="team-photo"
                     />
                     <div v-else class="staff-avatar-placeholder">
-                        {{ team.name.charAt(0).toUpperCase() }}
+                        {{ (team.name ?? '?').charAt(0).toUpperCase() }}
                     </div>
                     <p class="staff-name">{{ team.name }}</p>
                 </div>
@@ -61,7 +61,7 @@ defineProps({
                         class="staff-photo"
                     />
                     <div v-else class="staff-avatar-placeholder">
-                        {{ player.last_name.charAt(0).toUpperCase() }}
+                        {{ (player.last_name ?? '?').charAt(0).toUpperCase() }}
                     </div>
                     <p class="staff-name">{{ player.first_name }} {{ player.last_name }}</p>
                 </div>
