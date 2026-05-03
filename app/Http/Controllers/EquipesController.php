@@ -29,7 +29,7 @@ class EquipesController extends Controller
 
         return Inertia::render('Equipes/Show', [
             'category' => $category,
-            'teams'    => $category->teams()->get(),
+            'teams'    => $category->teams()->orderBy('name')->get(),
             'players'  => $category->players()
                 ->orderBy('last_name')
                 ->orderBy('first_name')
