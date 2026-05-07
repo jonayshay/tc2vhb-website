@@ -110,7 +110,13 @@ class CategoryResource extends Resource
                     ->label('Dupliquer')
                     ->excludeAttributes(['slug'])
                     ->beforeReplicaSaved(function (Category $replica): void {
-                        $replica->slug = \Illuminate\Support\Str::slug($replica->name) . '-copie';
+                        $base = \Illuminate\Support\Str::slug($replica->name) . '-copie';
+                        $slug = $base;
+                        $i    = 2;
+                        while (Category::where('slug', $slug)->where('season_id', $replica->season_id)->exists()) {
+                            $slug = $base . '-' . $i++;
+                        }
+                        $replica->slug = $slug;
                     }),
                 Tables\Actions\DeleteAction::make(),
             ]);
