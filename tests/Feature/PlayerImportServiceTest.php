@@ -141,6 +141,29 @@ class PlayerImportServiceTest extends TestCase
         $this->assertTrue(Player::where('last_name', 'G')->first()->has_image_rights);
     }
 
+    public function test_gender_h_is_treated_as_male(): void
+    {
+        $season = Season::factory()->create(['is_current' => true]);
+        $category = Category::factory()->create([
+            'season_id'      => $season->id,
+            'type'           => 'youth',
+            'gender'         => 'M',
+            'birth_year_min' => 2010,
+            'birth_year_max' => 2011,
+        ]);
+
+        $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
+               "Martin;Paul;2010-03-01;H;1;Non\n";
+        $path = $this->writeCsv($csv);
+
+        (new PlayerImportService())->import($path);
+
+        $this->assertDatabaseHas('players', [
+            'last_name'   => 'Martin',
+            'category_id' => $category->id,
+        ]);
+    }
+
     public function test_female_player_is_assigned_to_female_category(): void
     {
         $season = Season::factory()->create(['is_current' => true]);

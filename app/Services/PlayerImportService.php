@@ -102,8 +102,8 @@ class PlayerImportService
     private function findYouthCategory(int $birthYear, string $csvGender): ?Category
     {
         $genders = match (strtoupper(trim($csvGender))) {
-            'M', 'MASCULIN'           => ['M', 'Mixte'],
-            'F', 'FÉMININ', 'FEMININ' => ['F', 'Mixte'],
+            'M', 'H', 'MASCULIN', 'HOMME' => ['M', 'Mixte'],
+            'F', 'FEMININ', 'FÉMININ'     => ['F', 'Mixte'],
             default                   => ['Mixte'],
         };
 
@@ -124,8 +124,8 @@ class PlayerImportService
         $type      = $isLoisirs ? 'loisirs' : 'senior';
 
         $genders = match (strtoupper(trim($csvGender))) {
-            'M', 'MASCULIN'           => ['M', 'Mixte'],
-            'F', 'FÉMININ', 'FEMININ' => ['F', 'Mixte'],
+            'M', 'H', 'MASCULIN', 'HOMME' => ['M', 'Mixte'],
+            'F', 'FEMININ', 'FÉMININ'     => ['F', 'Mixte'],
             default                   => ['Mixte'],
         };
 
