@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActualitesController;
+use App\Http\Controllers\EquipesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeClubController;
 use App\Http\Controllers\PartenairesController;
@@ -19,3 +20,6 @@ Route::get('/le-club/entraineurs', [LeClubController::class, 'entraineurs'])->na
 Route::get('/le-club/arbitres', [LeClubController::class, 'arbitres'])->name('le-club.arbitres');
 Route::get('/le-club/bureau', [LeClubController::class, 'bureau'])->name('le-club.bureau');
 Route::get('/le-club/commissions', [LeClubController::class, 'commissions'])->name('le-club.commissions');
+
+Route::get('/equipes', [EquipesController::class, 'index'])->name('equipes.index');
+Route::get('/equipes/{slug}', [EquipesController::class, 'show'])->name('equipes.show');
