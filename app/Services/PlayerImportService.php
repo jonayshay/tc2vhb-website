@@ -13,13 +13,14 @@ class PlayerImportService
     public function import(string $csvPath): array
     {
         $imported  = 0;
+        $updated   = 0;
         $skipped   = 0;
         $unmatched = 0;
 
         SimpleExcelReader::create($csvPath, 'csv')
             ->useDelimiter(';')
             ->getRows()
-            ->each(function (array $row) use (&$imported, &$skipped, &$unmatched): void {
+            ->each(function (array $row) use (&$imported, &$updated, &$skipped, &$unmatched): void {
                 $lastName   = trim($row['Nom'] ?? '');
                 $firstName  = trim($row['Prenom'] ?? '');
                 $rawDate    = trim($row['Né(e) le'] ?? '');
@@ -47,12 +48,26 @@ class PlayerImportService
                     return;
                 }
 
-                if (Player::where('last_name', $lastName)
+                $existing = Player::where('last_name', $lastName)
                     ->where('first_name', $firstName)
                     ->whereDate('birth_date', $birthDate->toDateString())
-                    ->exists()
-                ) {
-                    $skipped++;
+                    ->first();
+
+                if ($existing !== null) {
+                    if ($existing->category_id !== null) {
+                        $skipped++;
+                        return;
+                    }
+
+                    $category = $this->findYouthCategory($birthDate->year, $gender)
+                        ?? $this->findAdultCategory($qualite, $gender);
+
+                    if ($category !== null) {
+                        $existing->update(['category_id' => $category->id]);
+                        $updated++;
+                    } else {
+                        $skipped++;
+                    }
                     return;
                 }
 
@@ -78,6 +93,7 @@ class PlayerImportService
 
         return [
             'imported'  => $imported,
+            'updated'   => $updated,
             'skipped'   => $skipped,
             'unmatched' => $unmatched,
         ];

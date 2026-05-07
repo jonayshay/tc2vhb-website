@@ -31,7 +31,7 @@ class ListPlayers extends ListRecords
 
                     Notification::make()
                         ->title('Import terminé')
-                        ->body("{$result['imported']} importés · {$result['skipped']} doublons ignorés · {$result['unmatched']} sans catégorie")
+                        ->body("{$result['imported']} importés · {$result['updated']} mis à jour · {$result['skipped']} ignorés · {$result['unmatched']} sans catégorie")
                         ->success()
                         ->send();
                 }),

@@ -47,13 +47,15 @@ class PlayerImportServiceTest extends TestCase
         ]);
     }
 
-    public function test_skips_duplicate_based_on_name_and_birth_date(): void
+    public function test_skips_duplicate_that_already_has_a_category(): void
     {
-        $season = Season::factory()->create(['is_current' => true]);
+        $season   = Season::factory()->create(['is_current' => true]);
+        $category = Category::factory()->create(['season_id' => $season->id]);
         Player::factory()->create([
-            'last_name'  => 'Dupont',
-            'first_name' => 'Jean',
-            'birth_date' => '2014-01-15',
+            'last_name'   => 'Dupont',
+            'first_name'  => 'Jean',
+            'birth_date'  => '2014-01-15',
+            'category_id' => $category->id,
         ]);
 
         $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
@@ -63,8 +65,42 @@ class PlayerImportServiceTest extends TestCase
         $result = (new PlayerImportService())->import($path);
 
         $this->assertEquals(0, $result['imported']);
+        $this->assertEquals(0, $result['updated']);
         $this->assertEquals(1, $result['skipped']);
         $this->assertDatabaseCount('players', 1);
+    }
+
+    public function test_updates_category_of_duplicate_without_category(): void
+    {
+        $season   = Season::factory()->create(['is_current' => true]);
+        $category = Category::factory()->create([
+            'season_id'      => $season->id,
+            'type'           => 'youth',
+            'gender'         => 'M',
+            'birth_year_min' => 2014,
+            'birth_year_max' => 2015,
+        ]);
+        Player::factory()->create([
+            'last_name'   => 'Dupont',
+            'first_name'  => 'Jean',
+            'birth_date'  => '2014-01-15',
+            'category_id' => null,
+        ]);
+
+        $csv = "Nom;Prenom;Né(e) le;sexe;Numero Licence;DroitImage\n" .
+               "Dupont;Jean;2014-01-15;M;123456;Oui\n";
+        $path = $this->writeCsv($csv);
+
+        $result = (new PlayerImportService())->import($path);
+
+        $this->assertEquals(0, $result['imported']);
+        $this->assertEquals(1, $result['updated']);
+        $this->assertEquals(0, $result['skipped']);
+        $this->assertDatabaseCount('players', 1);
+        $this->assertDatabaseHas('players', [
+            'last_name'   => 'Dupont',
+            'category_id' => $category->id,
+        ]);
     }
 
     public function test_creates_player_with_null_category_when_no_match(): void
